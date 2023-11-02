@@ -186,7 +186,7 @@ paths:
       tags:
         - Checkouts
       x-codegen:
-        method_name: get
+        method_name: list
       x-scopes:
         - payments
     post:
@@ -603,6 +603,8 @@ paths:
                 $ref: '#/components/schemas/Error'
       tags:
         - Checkouts
+      x-codegen:
+        method_name: get
       x-scopes:
         - payments
     parameters:
@@ -1915,6 +1917,8 @@ paths:
                 $ref: '#/components/schemas/ErrorForbidden'
       tags:
         - Merchant
+      x-codegen:
+        method_name: get_merchant_profile
       x-scopes:
         - user.profile
         - user.profile_readonly
