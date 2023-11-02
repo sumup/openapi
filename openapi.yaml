@@ -5363,11 +5363,22 @@ components:
       type: oauth2
 tags:
   - description: |
-      SumUp API uses [API keys](/online-payments/introduction/authorization#api-keys) for authentication. You can view and manage your API keys in the [API Keys](/api-keys) section of the [Developer Portal](/).
+      SumUp API uses [API keys](/online-payments/introduction/authorization#api-keys) for authentication.
+      You can view and manage your API keys in the [API Keys](/api-keys) section of the [Developer Portal](/).
+
+
       API keys are short static tokens that are passed in the `Authorization` header to authenticate the requests.
+
+
       The tokens have a `sup_sk_` prefix. Your API keys have access to the whole SumUp API, so make sure to keep them secure.
+
+
       All requests must be made over [HTTPS](https://en.wikipedia.org/wiki/HTTPS) and must be authenticated.
+
+
       Alternatively, SumUp APIs support [OAuth2](/online-payments/introduction/authorization#oauth-20) authentication for applications that want to use SumUp as a platform for other users.
+
+
       Read more about authorization in our [Authorization guide](/online-payments/introduction/authorization).
     name: Authorization
   - description: |
