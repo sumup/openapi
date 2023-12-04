@@ -310,7 +310,7 @@ paths:
                         vat_amount: 6
                     valid_until: '2020-02-29T10:56:56+00:00'
                 CheckoutAPM:
-                  description: 'Response body for APMs, including Sofort, iDeal, ...'
+                  description: 'Response body for APMs, including Blik, iDeal, ...'
                   value:
                     amount: 10.1
                     checkout_reference: 8ea25ec3-3293-40e9-a165-6d7f3b3073c5
@@ -669,16 +669,6 @@ paths:
                     user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.104 Safari/537.36'
                     user_ip: 172.217.169.174
                   payment_type: card
-              ProcessSofort:
-                description: Process a checkout with Sofort
-                value:
-                  payment_type: sofort
-                  personal_details:
-                    address:
-                      country: DE
-                    email: user@example.com
-                    first_name: John
-                    last_name: Doe
               ProcessToken:
                 description: Process a checkout with a token
                 value:
@@ -785,19 +775,6 @@ paths:
                         transaction_code: TEENSK4W2K
                         vat_amount: 6
                     valid_until: '2020-02-29T10:56:56+00:00'
-                CheckoutSuccessSofort:
-                  description: Successfully processed checkout with Sofort
-                  value:
-                    next_step:
-                      full: 'https://r3.girogate.de/ti/sofortueberweisungmixed?tx=624786308&rs=MyFOScJ7I3iAmU4Wmalwb1bObT1st1b1&cs=364d0864ffa3602eb757b18326ffeb8be0c9c6e2ab7dcfebc1e2b0f6491eaae9'
-                      mechanism:
-                        - browser
-                      method: GET
-                      payload:
-                        cs: 364d0864ffa3602eb757b18326ffeb8be0c9c6e2ab7dcfebc1e2b0f6491eaae9
-                        rs: MyFOScJ7I3iAmU4Wmalwb1bObT1st1b1
-                        tx: '624786308'
-                      url: 'https://r3.girogate.de/ti/sofortueberweisungmixed'
                 CheckoutSuccessToken:
                   description: Successfully processed checkout with a token
                   value:
@@ -2624,7 +2601,7 @@ paths:
                   value:
                     available_payment_methods:
                       - id: apple_pay
-                      - id: sofort
+                      - id: blik
               schema:
                 type: object
                 properties:
@@ -3749,7 +3726,7 @@ components:
             - card
             - boleto
             - ideal
-            - sofort
+            - blik
             - bancontact
         token:
           description: __Required when using a tokenized card to process a checkout.__ Unique token identifying the saved payment card for a customer.
