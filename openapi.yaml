@@ -4426,18 +4426,6 @@ components:
       description: 'Merchant settings &#40;like \"payout_type\", \"payout_period\"&#41;'
       type: object
       properties:
-        adyen_company:
-          description: Adyen company
-          type: string
-        adyen_merchant_code:
-          description: Adyen merchant code
-          type: string
-        adyen_password:
-          description: Adyen password
-          type: string
-        adyen_user:
-          description: Adyen username
-          type: string
         daily_payout_email:
           description: Whether merchant will receive daily payout emails
           type: boolean
