@@ -2522,6 +2522,99 @@ paths:
       tags:
         - members
       x-scopes: []
+  '/v0.1/merchants/{merchant_code}/members/{member_id}':
+    delete:
+      operationId: DeleteMerchantMember
+      summary: Delete member
+      description: Deletes member by ID.
+      parameters:
+        - name: merchant_code
+          in: path
+          required: true
+          schema:
+            type: string
+            example: MC0X0ABC
+        - name: member_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: mem_WZsm7QTPhVrompscmPhoGTXXcrd58fr9MOhP
+      responses:
+        '200':
+          description: Member deleted.
+        '404':
+          description: Merchant or member not found.
+      tags:
+        - members
+      x-scopes: []
+    get:
+      operationId: GetMerchantMember
+      summary: Get merchant member
+      description: Returns merchant member details.
+      parameters:
+        - name: merchant_code
+          in: path
+          required: true
+          schema:
+            type: string
+            example: MC0X0ABC
+        - name: member_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: mem_WZsm7QTPhVrompscmPhoGTXXcrd58fr9MOhP
+      responses:
+        '200':
+          description: Merchant member.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+        '404':
+          description: Merchant or member not found.
+      tags:
+        - members
+      x-scopes: []
+    put:
+      operationId: UpdateMerchantMember
+      summary: Update merchant member
+      description: Update assigned roles of the member.
+      parameters:
+        - name: merchant_code
+          in: path
+          required: true
+          schema:
+            type: string
+            example: MC0X0ABC
+        - name: member_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: mem_WZsm7QTPhVrompscmPhoGTXXcrd58fr9MOhP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                roles:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - roles
+      responses:
+        '204':
+          description: Member updated.
+        '404':
+          description: Merchant or member not found.
+      tags:
+        - members
+      x-scopes: []
   '/v0.1/merchants/{merchant_code}/payment-methods':
     get:
       operationId: GetPaymentMethods
