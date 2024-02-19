@@ -2474,7 +2474,7 @@ paths:
         '404':
           description: Merchant not found.
       tags:
-        - members
+        - Members
       x-scopes: []
     post:
       operationId: AddMerchantMember
@@ -2520,7 +2520,7 @@ paths:
           description: |
             Too many invitations sent to that user. The limit is 10 requests per 5 minutes and the Retry-After header is set to the number of minutes until the reset of the limit.
       tags:
-        - members
+        - Members
       x-scopes: []
   '/v0.1/merchants/{merchant_code}/members/{member_id}':
     delete:
@@ -2546,7 +2546,7 @@ paths:
         '404':
           description: Merchant or member not found.
       tags:
-        - members
+        - Members
       x-scopes: []
     get:
       operationId: GetMerchantMember
@@ -2575,7 +2575,7 @@ paths:
         '404':
           description: Merchant or member not found.
       tags:
-        - members
+        - Members
       x-scopes: []
     put:
       operationId: UpdateMerchantMember
@@ -2613,7 +2613,7 @@ paths:
         '404':
           description: Merchant or member not found.
       tags:
-        - members
+        - Members
       x-scopes: []
   '/v0.1/merchants/{merchant_code}/payment-methods':
     get:
@@ -4401,6 +4401,7 @@ components:
       required:
         - email
         - expires_at
+      title: Invite
     Lat:
       description: Latitude value from the coordinates of the payment location (as received from the payment terminal reader).
       type: number
@@ -4581,6 +4582,7 @@ components:
         - created_at
         - updated_at
         - status
+      title: Member
     Membership:
       description: |
         A membership associates a user with a resource, memberships is defined by user, resource, resource type, and associated roles.
@@ -4650,6 +4652,7 @@ components:
         - created_at
         - updated_at
         - status
+      title: Membership
     MerchantAccount:
       description: Details of the merchant account.
       type: object
@@ -5889,13 +5892,13 @@ tags:
       - $ref: '#/components/schemas/Reader'
   - description: |
       Endpoints to manage account members. Members are users that have membership within merchant accounts.
-    name: members
+    name: Members
     x-beta: true
     x-core-objects:
       - $ref: '#/components/schemas/Member'
   - description: |
       Endpoints to manage user memberships. Memberships are used to connect users to merchants and to grant them access to the merchant's resources via roles.
-    name: memberships
+    name: Memberships
     x-beta: true
     x-core-objects:
       - $ref: '#/components/schemas/Membership'
