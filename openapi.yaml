@@ -2417,6 +2417,111 @@ paths:
         - developer_settings_write
       x-scopes:
         - 'api_keys:write'
+  '/v0.1/merchants/{merchant_code}/members':
+    get:
+      operationId: ListMerchantMembers
+      summary: List members
+      description: |
+        Lists merchant members with their roles and permissions.
+      parameters:
+        - name: offset
+          in: query
+          description: Offset of the first member to return.
+          schema:
+            type: integer
+            example: 0
+            default: 0
+            minimum: 0
+        - name: limit
+          in: query
+          description: Maximum number of member to return.
+          schema:
+            type: integer
+            example: 10
+            default: 10
+            maximum: 25
+            minimum: 1
+        - name: email
+          in: query
+          description: Filter the returned users by email address prefix.
+          schema:
+            type: string
+            example: user
+        - name: merchant_code
+          in: path
+          required: true
+          schema:
+            type: string
+            example: MC0X0ABC
+      responses:
+        '200':
+          description: List of members.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Member'
+                  total_count:
+                    type: integer
+                    example: 3
+                required:
+                  - total_count
+                  - items
+        '404':
+          description: Merchant not found.
+      tags:
+        - members
+      x-scopes: []
+    post:
+      operationId: AddMerchantMember
+      summary: Add member to merchant.
+      parameters:
+        - name: merchant_code
+          in: path
+          required: true
+          schema:
+            type: string
+            example: MC0X0ABC
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  description: Email address of the member to add.
+                  type: string
+                  format: email
+                roles:
+                  description: List of roles to assign to the new member.
+                  type: array
+                  items:
+                    type: string
+              required:
+                - email
+                - roles
+      responses:
+        '201':
+          description: Member created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+        '400':
+          description: Invalid request.
+        '404':
+          description: Merchant not found.
+        '429':
+          description: |
+            Too many invitations sent to that user. The limit is 10 requests per 5 minutes and the Retry-After header is set to the number of minutes until the reset of the limit.
+      tags:
+        - members
+      x-scopes: []
   '/v0.1/merchants/{merchant_code}/payment-methods':
     get:
       operationId: GetPaymentMethods
@@ -4186,6 +4291,23 @@ components:
       description: Indication of the precision of the geographical position received from the payment terminal.
       type: number
       format: float
+    Invite:
+      description: |
+        Pending invitation for membership.
+      type: object
+      properties:
+        email:
+          description: Email address of the invited user.
+          type: string
+          format: email
+          example: boaty.mcboatface@sumup.com
+        expires_at:
+          type: string
+          format: date-time
+          example: '2023-01-20T15:16:17Z'
+      required:
+        - email
+        - expires_at
     Lat:
       description: Latitude value from the coordinates of the payment location (as received from the payment terminal reader).
       type: number
@@ -4280,6 +4402,161 @@ components:
         merchant_code: MDASYTPD
         status: active
         type: recurrent
+    Member:
+      description: |
+        A member is user within speicfic resource identified by resource id, resource type, and associated roles.
+      type: object
+      properties:
+        created_at:
+          type: string
+          format: date-time
+          example: '2023-01-20T15:16:17Z'
+        id:
+          description: ID of the member.
+          type: string
+          example: mem_WZsm7QTPhVrompscmPhoGTXXcrd58fr9MOhP
+        invite:
+          $ref: '#/components/schemas/Invite'
+        permissions:
+          description: User's permissions.
+          type: array
+          items:
+            type: string
+          example:
+            - members_read
+            - members_write
+            - create_moto_payments
+            - full_transaction_history_view
+            - refund_transactions
+            - create_referral
+            - developer_settings_write
+            - developer_settings_read
+        roles:
+          description: User's roles.
+          type: array
+          items:
+            type: string
+          example:
+            - role_admin
+        status:
+          type: string
+          enum:
+            - accepted
+            - pending
+        updated_at:
+          type: string
+          format: date-time
+          example: '2023-01-20T15:16:17Z'
+        user:
+          description: User information.
+          type: object
+          properties:
+            disabled_at:
+              description: |
+                Time when the user has been disabled. Applies only to virtual users (`virtual_user: true`).
+              type: string
+              format: date-time
+            email:
+              description: |
+                End-User's preferred e-mail address. Its value MUST conform to the RFC 5322 [RFC5322] addr-spec syntax. The RP MUST NOT rely upon this value being unique, for unique identification use ID instead.
+              type: string
+              example: example@sumup.com
+            id:
+              description: Identifier for the End-User (also called Subject).
+              type: string
+              example: 44ca0f5b-813b-46e1-aee7-e6242010662e
+            mfa_on_login_enabled:
+              description: |
+                True if the user has enabled MFA on login.
+              type: boolean
+              example: true
+            virtual_user:
+              description: |
+                True if the user is a virtual user (operator).
+              type: boolean
+              example: false
+          required:
+            - id
+            - email
+            - mfa_on_login_enabled
+            - virtual_user
+      required:
+        - id
+        - type
+        - roles
+        - permissions
+        - created_at
+        - updated_at
+        - status
+    Membership:
+      description: |
+        A membership associates a user with a resource, memberships is defined by user, resource, resource type, and associated roles.
+      type: object
+      properties:
+        created_at:
+          type: string
+          format: date-time
+          example: '2023-01-20T15:16:17Z'
+        id:
+          description: ID of the membership.
+          type: string
+          example: mem_WZsm7QTPhVrompscmPhoGTXXcrd58fr9MOhP
+        invite:
+          $ref: '#/components/schemas/Invite'
+        permissions:
+          description: User's permissions.
+          type: array
+          items:
+            type: string
+          example:
+            - members_read
+            - members_write
+            - create_moto_payments
+            - full_transaction_history_view
+            - refund_transactions
+            - create_referral
+            - developer_settings_write
+            - developer_settings_read
+        resource_id:
+          description: ID of the resource the membership is in.
+          type: string
+          example: M2DDT39A
+        resource_name:
+          description: Name of the resource the membership is in.
+          type: string
+          example: SumUp
+        roles:
+          description: User's roles.
+          type: array
+          items:
+            type: string
+          example:
+            - role_admin
+        status:
+          type: string
+          enum:
+            - accepted
+            - pending
+        type:
+          description: Type of the resource the membership is in.
+          type: string
+          example: merchant
+          enum:
+            - merchant
+        updated_at:
+          type: string
+          format: date-time
+          example: '2023-01-20T15:16:17Z'
+      required:
+        - id
+        - resource_id
+        - resource_name
+        - type
+        - roles
+        - permissions
+        - created_at
+        - updated_at
+        - status
     MerchantAccount:
       description: Details of the merchant account.
       type: object
@@ -5514,5 +5791,18 @@ tags:
   - description: |
       A reader represents a device that accepts payments. You can use the SumUp Solo to accept in-person payments.
     name: Readers
+    x-beta: true
     x-core-objects:
       - $ref: '#/components/schemas/Reader'
+  - description: |
+      Endpoints to manage account members. Members are users that have membership within merchant accounts.
+    name: members
+    x-beta: true
+    x-core-objects:
+      - $ref: '#/components/schemas/Member'
+  - description: |
+      Endpoints to manage user memberships. Memberships are used to connect users to merchants and to grant them access to the merchant's resources via roles.
+    name: memberships
+    x-beta: true
+    x-core-objects:
+      - $ref: '#/components/schemas/Membership'
