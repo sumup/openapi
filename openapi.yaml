@@ -1602,6 +1602,80 @@ paths:
         method_name: update
       x-scopes:
         - user.subaccounts
+  /v0.1/me/financials/payouts:
+    get:
+      operationId: ListPayouts
+      summary: List payouts
+      description: Lists ordered payouts for the merchant profile.
+      parameters:
+        - name: start_date
+          in: query
+          description: 'Start date (in [ISO8601](https://en.wikipedia.org/wiki/ISO_8601) format).'
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          description: 'End date (in [ISO8601](https://en.wikipedia.org/wiki/ISO_8601) format).'
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum:
+              - desc
+              - asc
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinancialPayouts'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              examples:
+                Invalid_Token:
+                  description: The access token is invalid or has expired.
+                  value:
+                    error_code: NOT_AUTHORIZED
+                    error_message: invalid access token
+                Missing_Token:
+                  description: No access token is provided.
+                  value:
+                    error_code: NOT_AUTHORIZED
+                    message: access token required
+                Not_Authorized_Token:
+                  description: The access token is valid but the application is not authorized.
+                  value:
+                    error_code: NOT_AUTHORIZED
+                    error_message: NOT_AUTHORIZED
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - Payouts
+      x-codegen:
+        method_name: list
+      x-scopes:
+        - user.profile
+        - user.profile_readonly
   /v0.1/me/merchant-profile:
     get:
       operationId: GetMerchantProfile
@@ -4020,6 +4094,42 @@ components:
         - CHARGE_BACK
         - REFUND
         - PAYOUT_DEDUCTION
+    FinancialPayouts:
+      type: array
+      items:
+        properties:
+          amount:
+            type: number
+            format: float
+          currency:
+            type: string
+          date:
+            type: string
+            format: date
+          fee:
+            type: number
+            format: float
+          id:
+            type: integer
+          reference:
+            type: string
+          status:
+            type: string
+            enum:
+              - SUCCESSFUL
+              - FAILED
+          transaction_code:
+            type: string
+          type:
+            type: string
+            enum:
+              - PAYOUT
+              - CHARGE_BACK_DEDUCTION
+              - REFUND_DEDUCTION
+              - DD_RETURN_DEDUCTION
+              - BALANCE_DEDUCTION
+        type: object
+      title: Financial Payouts
     HorizontalAccuracy:
       description: Indication of the precision of the geographical position received from the payment terminal.
       type: number
@@ -5189,6 +5299,9 @@ components:
                 - VISA_ELECTRON
                 - VISA_VPAY
                 - UNKNOWN
+            client_transaction_id:
+              description: Client-specific ID of the transaction.
+              type: string
             transaction_id:
               $ref: '#/components/schemas/TransactionID'
             type:
@@ -5402,6 +5515,12 @@ tags:
       Retrieve details for a specific transaction by it’s `id`
       or any other required query parameter, or list all transactions related to the merchant account.
     name: Transactions
+  - description: |
+      The Payouts model will allow you to track funds you’ve received from SumUp.
+      You can receive a detailed payouts list with information like dates, fees, references and statuses, using the `List payouts` endpoint.
+    name: Payouts
+    x-core-objects:
+      - $ref: '#/components/schemas/FinancialPayouts'
   - description: The Receipts model obtains receipt-like details for specific transactions.
     name: Receipts
     x-core-objects:
