@@ -3325,37 +3325,6 @@ components:
       description: Details of the payment card.
       type: object
       properties:
-        cvv:
-          description: Three-digit card verification value (security code) of the payment card.
-          type: string
-          example: '123'
-          maxLength: 3
-          minLength: 3
-          writeOnly: true
-        expiry_month:
-          description: Month from the expiration time of the payment card. Accepted format is `MM`.
-          type: string
-          enum:
-            - '01'
-            - '02'
-            - '03'
-            - '04'
-            - '05'
-            - '06'
-            - '07'
-            - '08'
-            - '09'
-            - '10'
-            - '11'
-            - '12'
-          writeOnly: true
-        expiry_year:
-          description: Year from the expiration time of the payment card. Accepted formats are `YY` and `YYYY`.
-          type: string
-          example: '2023'
-          maxLength: 4
-          minLength: 2
-          writeOnly: true
         last_4_digits:
           description: Last 4 digits of the payment card number.
           type: string
@@ -3363,16 +3332,6 @@ components:
           maxLength: 4
           minLength: 4
           readOnly: true
-        name:
-          description: Name of the cardholder as it appears on the payment card.
-          type: string
-          example: FIRSTNAME LASTNAME
-          writeOnly: true
-        number:
-          description: Number of the payment card (without spaces).
-          type: string
-          example: '1234567890123456'
-          writeOnly: true
         type:
           description: Issuing card network of the payment card.
           type: string
@@ -3392,13 +3351,6 @@ components:
             - VISA_VPAY
             - UNKNOWN
           readOnly: true
-        zip_code:
-          description: Required five-digit ZIP code. Applicable only to merchant users in the USA.
-          type: string
-          example: '12345'
-          maxLength: 5
-          minLength: 5
-          writeOnly: true
     Checkout:
       description: Details of the payment checkout.
       type: object
