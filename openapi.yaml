@@ -2249,7 +2249,7 @@ paths:
       tags:
         - API Keys
       x-permissions:
-        - developer_settings_read
+        - api_keys_list
       x-scopes:
         - api_keys
     post:
@@ -2290,7 +2290,7 @@ paths:
       tags:
         - API Keys
       x-permissions:
-        - developer_settings_write
+        - api_keys_create
       x-scopes:
         - 'api_keys:write'
   '/v0.1/merchants/{merchant_code}/api-keys/{key_id}':
@@ -2318,7 +2318,7 @@ paths:
       tags:
         - API Keys
       x-permissions:
-        - developer_settings_write
+        - api_keys_delete
       x-scopes:
         - 'api_keys:write'
     get:
@@ -2349,7 +2349,7 @@ paths:
       tags:
         - API Keys
       x-permissions:
-        - developer_settings_read
+        - api_keys_view
       x-scopes:
         - api_keys
     put:
@@ -2393,7 +2393,7 @@ paths:
       tags:
         - API Keys
       x-permissions:
-        - developer_settings_write
+        - api_keys_update
       x-scopes:
         - 'api_keys:write'
   '/v0.1/merchants/{merchant_code}/members':
@@ -2426,6 +2426,11 @@ paths:
           schema:
             type: string
             example: user
+        - name: status
+          in: query
+          description: Filter the returned members by the membership status.
+          schema:
+            $ref: '#/components/schemas/MembershipStatus'
         - name: merchant_code
           in: path
           required: true
@@ -2454,6 +2459,8 @@ paths:
           description: Merchant not found.
       tags:
         - Members
+      x-permissions:
+        - members_list
       x-scopes: []
     post:
       operationId: AddMerchantMember
@@ -2500,6 +2507,8 @@ paths:
             Too many invitations sent to that user. The limit is 10 requests per 5 minutes and the Retry-After header is set to the number of minutes until the reset of the limit.
       tags:
         - Members
+      x-permissions:
+        - members_create
       x-scopes: []
   '/v0.1/merchants/{merchant_code}/members/{member_id}':
     delete:
@@ -2526,6 +2535,8 @@ paths:
           description: Merchant or member not found.
       tags:
         - Members
+      x-permissions:
+        - members_delete
       x-scopes: []
     get:
       operationId: GetMerchantMember
@@ -2555,6 +2566,8 @@ paths:
           description: Merchant or member not found.
       tags:
         - Members
+      x-permissions:
+        - members_view
       x-scopes: []
     put:
       operationId: UpdateMerchantMember
@@ -2593,6 +2606,8 @@ paths:
           description: Merchant or member not found.
       tags:
         - Members
+      x-permissions:
+        - members_update
       x-scopes: []
   '/v0.1/merchants/{merchant_code}/payment-methods':
     get:
@@ -2688,6 +2703,217 @@ paths:
         method_name: list_available_payment_methods
       x-scopes:
         - payments
+  '/v0.1/merchants/{merchant_code}/readers':
+    get:
+      operationId: ListReaders
+      summary: List Readers
+      description: |
+        Returns list of all readers of the merchant.
+      parameters:
+        - name: merchant_code
+          in: path
+          required: true
+          schema:
+            type: string
+            example: MC0X0ABC
+      responses:
+        '200':
+          description: |
+            List of readers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Reader'
+                required:
+                  - items
+      tags:
+        - Readers
+      x-permissions:
+        - readers_list
+      x-scopes:
+        - readers.read
+    post:
+      operationId: CreateReader
+      summary: Create a Reader
+      description: |
+        Create a new reader linked to the merchant account.
+      parameters:
+        - name: merchant_code
+          in: path
+          required: true
+          schema:
+            type: string
+            example: MC0X0ABC
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                meta:
+                  $ref: '#/components/schemas/Meta'
+                name:
+                  $ref: '#/components/schemas/ReaderName'
+                pairing_code:
+                  $ref: '#/components/schemas/ReaderPairingCode'
+              required:
+                - pairing_code
+      responses:
+        '201':
+          description: |
+            The reader got created.
+          content:
+            application/json:
+              examples:
+                created:
+                  $ref: '#/components/examples/CreatedReader'
+              schema:
+                $ref: '#/components/schemas/Reader'
+          links:
+            DeleteReaderByID:
+              $ref: '#/components/links/DeleteReaderByID'
+            UpdateReaderByID:
+              $ref: '#/components/links/UpdateReaderByID'
+      tags:
+        - Readers
+      x-permissions:
+        - readers_create
+      x-scopes:
+        - readers.write
+  '/v0.1/merchants/{merchant_code}/readers/{id}':
+    delete:
+      operationId: DeleteReader
+      summary: Delete a reader
+      description: |
+        Deletes a Reader.
+      parameters:
+        - name: merchant_code
+          in: path
+          required: true
+          schema:
+            type: string
+            example: MC0X0ABC
+        - name: id
+          in: path
+          description: |
+            The unique identifier of the reader.
+          required: true
+          schema:
+            $ref: '#/components/schemas/ReaderID'
+      responses:
+        '200':
+          description: |
+            The reader got successfully deleted from the merchant account.
+      tags:
+        - Readers
+      x-permissions:
+        - readers_delete
+      x-scopes:
+        - readers.write
+    get:
+      operationId: GetReader
+      summary: Retrieve a Reader
+      description: |
+        Gets a Reader.
+      parameters:
+        - name: If-Modified-Since
+          in: header
+          description: |
+            Return the reader only if it has been modified after the specified timestamp given in the headers.
+
+            Timestamps are accepted in the following formats:
+             - HTTP Standard: [IMF format (RFC 5322)](https://www.rfc-editor.org/rfc/rfc5322#section-3.3), sometimes also refered to as [RFC 7231](https://www.rfc-editor.org/rfc/rfc7231#section-7.1.1.1).
+             - RFC 3339: Used for timestamps in JSON payloads on this API.
+          schema:
+            type: string
+            oneOf:
+              - example: 'Tue, 03 May 2022 14:46:44 GMT'
+                format: httpdate
+                type: string
+              - example: '2023-05-30T10:38:01Z'
+                format: date-time
+                type: string
+        - name: merchant_code
+          in: path
+          required: true
+          schema:
+            type: string
+            example: MC0X0ABC
+        - name: id
+          in: path
+          description: |
+            The unique identifier of the reader.
+          required: true
+          schema:
+            $ref: '#/components/schemas/ReaderID'
+      responses:
+        '200':
+          description: |
+            Reader object got returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reader'
+        '400':
+          description: Malformed request.
+        '404':
+          description: |
+            The requested Reader ressource does not exists.
+      tags:
+        - Readers
+      x-permissions:
+        - readers_view
+      x-scopes:
+        - readers.read
+    patch:
+      operationId: UpdateReader
+      summary: Update a Reader
+      description: |
+        Updates a Reader.
+      parameters:
+        - name: merchant_code
+          in: path
+          required: true
+          schema:
+            type: string
+            example: MC0X0ABC
+        - name: id
+          in: path
+          description: |
+            The unique identifier of the reader.
+          required: true
+          schema:
+            $ref: '#/components/schemas/ReaderID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                meta:
+                  $ref: '#/components/schemas/Meta'
+                name:
+                  $ref: '#/components/schemas/ReaderName'
+      responses:
+        '304':
+          description: |
+            The update request was successfull, but the reader didn't get updated.
+        '403':
+          description: |
+            The reader is not linked to the merchant account.
+      tags:
+        - Readers
+      x-permissions:
+        - readers_update
+      x-scopes:
+        - readers.write
   '/v1.1/receipts/{id}':
     get:
       operationId: GetReceipt
@@ -4235,47 +4461,13 @@ components:
           example:
             - role_admin
         status:
-          type: string
-          enum:
-            - accepted
-            - pending
+          $ref: '#/components/schemas/MembershipStatus'
         updated_at:
           type: string
           format: date-time
           example: '2023-01-20T15:16:17Z'
         user:
-          description: User information.
-          type: object
-          properties:
-            disabled_at:
-              description: |
-                Time when the user has been disabled. Applies only to virtual users (`virtual_user: true`).
-              type: string
-              format: date-time
-            email:
-              description: |
-                End-User's preferred e-mail address. Its value MUST conform to the RFC 5322 [RFC5322] addr-spec syntax. The RP MUST NOT rely upon this value being unique, for unique identification use ID instead.
-              type: string
-              example: example@sumup.com
-            id:
-              description: Identifier for the End-User (also called Subject).
-              type: string
-              example: 44ca0f5b-813b-46e1-aee7-e6242010662e
-            mfa_on_login_enabled:
-              description: |
-                True if the user has enabled MFA on login.
-              type: boolean
-              example: true
-            virtual_user:
-              description: |
-                True if the user is a virtual user (operator).
-              type: boolean
-              example: false
-          required:
-            - id
-            - email
-            - mfa_on_login_enabled
-            - virtual_user
+          $ref: '#/components/schemas/MembershipUser'
       example:
         created_at: '2023-01-20T15:16:17Z'
         id: mem_WZsm7QTPhVrompscmPhoGTXXcrd58fr9MOhP
@@ -4351,10 +4543,7 @@ components:
           example:
             - role_admin
         status:
-          type: string
-          enum:
-            - accepted
-            - pending
+          $ref: '#/components/schemas/MembershipStatus'
         type:
           description: Type of the resource the membership is in.
           type: string
@@ -4376,6 +4565,63 @@ components:
         - updated_at
         - status
       title: Membership
+    MembershipStatus:
+      type: string
+      enum:
+        - accepted
+        - pending
+        - expired
+        - unknown
+    MembershipUser:
+      description: User information.
+      type: object
+      properties:
+        classic:
+          $ref: '#/components/schemas/MembershipUserClassic'
+        disabled_at:
+          description: |
+            Time when the user has been disabled. Applies only to virtual users (`virtual_user: true`).
+          type: string
+          format: date-time
+        email:
+          description: |
+            End-User's preferred e-mail address. Its value MUST conform to the RFC 5322 [RFC5322] addr-spec syntax. The RP MUST NOT rely upon this value being unique, for unique identification use ID instead.
+          type: string
+          example: example@sumup.com
+        id:
+          description: Identifier for the End-User (also called Subject).
+          type: string
+          example: 44ca0f5b-813b-46e1-aee7-e6242010662e
+        mfa_on_login_enabled:
+          description: |
+            True if the user has enabled MFA on login.
+          type: boolean
+          example: true
+        nickname:
+          description: |
+            User's perferred name. Used for display purposes only.
+          type: string
+          example: Test User
+        virtual_user:
+          description: |
+            True if the user is a virtual user (operator).
+          type: boolean
+          example: false
+      required:
+        - id
+        - email
+        - mfa_on_login_enabled
+        - virtual_user
+    MembershipUserClassic:
+      description: Classic identifiers of the user.
+      type: object
+      properties:
+        user_id:
+          type: integer
+          format: int32
+      deprecated: true
+      required:
+        - user_id
     MerchantAccount:
       description: Details of the merchant account.
       type: object
@@ -4594,6 +4840,12 @@ components:
         printers_enabled:
           description: Printers enabled.
           type: boolean
+    Meta:
+      description: Set of user-defined key-value pairs attached to the object.
+      type: object
+      example: {}
+      additionalProperties:
+        maxLength: 256
     OAuth2Scopes:
       type: array
       items:
@@ -4876,6 +5128,100 @@ components:
           description: VAT rate applicable to the product.
           type: number
           format: float
+    Reader:
+      description: A physical card reader device that can accept in-person payments.
+      type: object
+      properties:
+        created_at:
+          description: Reader creation timestamp.
+          type: string
+          format: date-time
+          example: '2023-01-18T15:16:17Z'
+        device:
+          $ref: '#/components/schemas/ReaderDevice'
+        id:
+          $ref: '#/components/schemas/ReaderID'
+        meta:
+          $ref: '#/components/schemas/Meta'
+        name:
+          $ref: '#/components/schemas/ReaderName'
+        status:
+          $ref: '#/components/schemas/ReaderStatus'
+        updated_at:
+          description: Reader last-modification timestamp.
+          type: string
+          format: date-time
+          example: '2023-01-20T15:16:17Z'
+      required:
+        - id
+        - name
+        - status
+        - device
+        - created_at
+        - updated_at
+      title: Reader
+    ReaderDevice:
+      description: |
+        Information about the underlying physical device.
+      type: object
+      properties:
+        identifier:
+          description: A unique identifier of the physical device (e.g. serial number).
+          type: string
+          example: U1DT3NA00-CN
+        model:
+          description: Identifier of the model of the device.
+          type: string
+          example: solo
+          enum:
+            - solo
+            - virtual-solo
+      required:
+        - identifier
+        - model
+    ReaderID:
+      description: |
+        Unique identifier of the object.
+
+        Note that this identifies the instance of the physical devices pairing with your SumUp account. 
+
+        If you DELETE a reader, and pair the device again, the ID will be different. Do not use this ID to refer to a physical device.
+      type: string
+      example: rdr_3MSAFM23CK82VSTT4BN6RWSQ65
+      maxLength: 30
+      minLength: 30
+      x-go-type: readers.ReaderID
+      x-go-type-import:
+        path: github.com/sumup/identity/apps/portier-backend/internal/domain/readers
+    ReaderName:
+      description: |
+        Custom human-readable, user-defined name for easier identification of the reader.
+      type: string
+      example: Frontdesk
+      maxLength: 500
+    ReaderPairingCode:
+      description: |
+        The pairing code is a 8 or 9 character alphanumeric string that is displayed on a SumUp Device after initiating the pairing.
+        It is used to link the physical device to the created pairing.
+      type: string
+      example: 4WLFDSBF
+      maxLength: 9
+      minLength: 8
+    ReaderStatus:
+      description: |
+        The status of the reader object gives information about the current state of the reader.
+        Possible values:
+        * `unknown` - The reader status is unknown.
+        * `processing` - The reader is created and waits for the physical device to confirm the pairing.
+        * `paired` - The reader is paired with a merchant account and can be used with SumUp APIs.
+        * `expired` - The pairing is expired and no longer usable with the account. The ressource needs to get recreated
+      type: string
+      example: paired
+      enum:
+        - unknown
+        - processing
+        - paired
+        - expired
     Receipt:
       type: object
       properties:
@@ -5383,6 +5729,31 @@ components:
         rate:
           description: Rate
           type: number
+  examples:
+    CreatedReader:
+      summary: A reader that waits for the physical device to acknowledge the pairing.
+      value:
+        created_at: '2023-05-09T14:50:20.214Z'
+        device:
+          identifier: U1DT3NA00-CN
+          model: solo
+        id: rdr_3MSAFM23CK82VSTT4BN6RWSQ65
+        name: Frontdesk
+        status: processing
+        updated_at: '2023-05-09T14:52:58.714Z'
+  links:
+    DeleteReaderByID:
+      description: |
+        Delete the reader.
+      operationId: DeleteReader
+      parameters:
+        id: $response.body#/id
+    UpdateReaderByID:
+      description: |
+        Update the reader object. This can be used to set a name after using this endpoint to verify the pairing code.
+      operationId: UpdateReader
+      parameters:
+        id: $response.body#/id
   securitySchemes:
     accessToken:
       description: |
@@ -5491,6 +5862,12 @@ tags:
     name: API Keys
     x-core-objects:
       - $ref: '#/components/schemas/APIKey'
+  - description: |
+      A reader represents a device that accepts payments. You can use the SumUp Solo to accept in-person payments.
+    name: Readers
+    x-beta: true
+    x-core-objects:
+      - $ref: '#/components/schemas/Reader'
   - description: |
       Endpoints to manage account members. Members are users that have membership within merchant accounts.
     name: Members
