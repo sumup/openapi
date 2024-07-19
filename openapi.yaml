@@ -2914,6 +2914,153 @@ paths:
         - readers_update
       x-scopes:
         - readers.write
+  '/v0.1/merchants/{merchant_code}/readers/{id}/checkout':
+    post:
+      operationId: CreateReaderCheckout
+      summary: Create a Reader Checkout
+      description: |
+        Create a Checkout for a Reader.
+
+        This process is asynchronous and the actual transaction may take some time to be stared on the device.
+
+
+        There are some caveats when using this endpoint:
+        * The target device must be online, otherwise checkout won't be accepted
+        * After the checkout is accepted, the system has 60 seconds to start the payment on the target device. During this time, any other checkout for the same device will be rejected.
+
+        **Note**: If the target device is a Solo, it must be in version 3.3.24.3 or higher.
+      parameters:
+        - name: merchant_code
+          in: path
+          required: true
+          schema:
+            type: string
+            example: MC0X0ABC
+        - name: id
+          in: path
+          description: |
+            The unique identifier of the reader.
+          required: true
+          schema:
+            type: string
+            example: rdr_3MSAFM23CK82VSTT4BN6RWSQ65
+            maxLength: 30
+            minLength: 30
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReaderCheckout'
+      responses:
+        '201':
+          description: |
+            The Checkout got successfully created for the given reader.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      client_transaction_id:
+                        description: |
+                          The client transaction ID is a unique identifier for the transaction that is generated for the client.
+                          It can be used later to fetch the transaction details via the [Transactions API](https://developer.sumup.com/api/transactions/get).
+                        type: string
+                        format: uuid
+                        example: 123e4567-e89b-12d3-a456-426614174000
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      detail:
+                        type: string
+                        example: Bad Request
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              examples:
+                DataValidation:
+                  description: Validation errors for the informed fields.
+                  value:
+                    errors:
+                      card_type:
+                        - is invalid
+                      installments:
+                        - not allowed
+                      total_amount:
+                        - is too low
+                        - this merchant can only accept 'EUR'
+                ReaderCheckoutPending:
+                  description: Error returned when a checkout was requested in the last 60 seconds.
+                  value:
+                    errors:
+                      detail: A pending transaction already exists for this device
+                ReaderOffline:
+                  description: Error returned when the target device is not online.
+                  value:
+                    errors:
+                      detail: The device is offline.
+                      type: READER_OFFLINE
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    additionalProperties: true
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      detail:
+                        type: string
+                        example: Internal Server Error
+        '502':
+          description: Bad Gateway
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      detail:
+                        type: string
+                        example: Bad Gateway
+        '504':
+          description: Gateway Timeout
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      detail:
+                        type: string
+                        example: Gateway Timeout
+      tags:
+        - Readers
+      x-permissions:
+        - readers_checkout_create
+      x-scopes:
+        - readers.write
   '/v1.1/receipts/{id}':
     get:
       operationId: GetReceipt
@@ -3232,6 +3379,43 @@ components:
           type: string
         timeoffset_details:
           $ref: '#/components/schemas/TimeoffsetDetails'
+    Affiliate:
+      description: |
+        Affiliate metadata for the transaction.
+        It is an optional field that allow for integrators to track the source of the transaction.
+      type: object
+      properties:
+        app_id:
+          description: |
+            Application ID of the affiliate.
+            It is a unique identifier for the application and should be set by the integrator in the [Affiliate Keys](https://developer.sumup.com/affiliate-keys) page.
+          type: string
+          example: com.example.app
+        foreign_transaction_id:
+          description: |
+            Foreign transaction ID of the affiliate.
+            It is a unique identifier for the transaction.
+            It can be used later to fetch the transaction details via the [Transactions API](https://developer.sumup.com/api/transactions/get).
+          type: string
+          example: '123456'
+        key:
+          description: |
+            Key of the affiliate.
+            It is a unique identifier for the key  and should be generated by the integrator in the [Affiliate Keys](https://developer.sumup.com/affiliate-keys) page.
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        tags:
+          description: |
+            Additional metadata for the transaction.
+            It is key-value object that can be associoated with the transaction.
+          type: object
+          example: {}
+          additionalProperties: true
+      required:
+        - app_id
+        - key
+        - foreign_transaction_id
     AmountEvent:
       description: Amount of the event.
       type: number
@@ -4071,6 +4255,72 @@ components:
         native_name:
           description: Country native name
           type: string
+    CreateReaderCheckout:
+      description: |
+        Teste Reader Checkout
+      type: object
+      properties:
+        affiliate:
+          $ref: '#/components/schemas/Affiliate'
+        card_type:
+          description: |
+            The card type of the card used for the transaction.
+            Is is required only for some countries (e.g: Brazil).
+          type: string
+          example: credit
+          enum:
+            - credit
+            - debit
+        description:
+          description: |
+            Description of the checkout to be shown in the Merchant Sales
+          type: string
+        installments:
+          description: |
+            Number of installments for the transaction.
+            It may vary according to the merchant country.
+            For example, in Brazil, the maximum number of installments is 12.
+          type: integer
+          example: 1
+        return_url:
+          description: |
+            Webhook URL to which the payment result will be sent.
+            It must be a HTTPS url.
+          type: string
+          format: uri
+          example: 'https://www.example.com'
+        total_amount:
+          $ref: '#/components/schemas/CreateReaderCheckoutAmount'
+      required:
+        - total_amount
+      title: Reader
+    CreateReaderCheckoutAmount:
+      description: |
+        Amount of the transaction.
+        The amount is represented as an integer value altogether with the currency and the minor unit.
+        For example, EUR 1.00 is represented as value 100 with minor unit of 2.
+      type: object
+      properties:
+        currency:
+          description: Currency ISO 4217 code
+          type: string
+          example: EUR
+        minor_unit:
+          description: |
+            The minor units of the currency. It represents the number of decimals of the currency.
+            For the currencies CLP, COP and HUF, the minor unit is 0.
+          type: integer
+          example: 2
+        value:
+          description: |
+            Total amount of the transaction.
+            It must be a positive integer.
+          type: integer
+          example: 1000
+      required:
+        - value
+        - currency
+        - minor_unit
     Currency:
       description: 'Three-letter [ISO4217](https://en.wikipedia.org/wiki/ISO_4217) code of the currency for the amount. Currently supported currency values are enumerated above.'
       type: string
