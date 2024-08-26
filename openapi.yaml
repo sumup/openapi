@@ -1335,273 +1335,268 @@ paths:
   /v0.1/me/accounts:
     get:
       operationId: ListSubAccounts
-      summary: List subaccounts
+      summary: List operators.
+      description: Returns list of operators for currently authorized user's merchant.
+      parameters:
+        - name: query
+          in: query
+          description: |
+            Search query used to filter users that match given query term.
+
+            Current implementation allow querying only over the email address.
+            All operators whos email address contains the query string are returned.
+          schema:
+            type: string
+        - name: include_primary
+          in: query
+          description: If true the list of operators will include also the primary user.
+          schema:
+            type: boolean
       responses:
         '200':
-          description: OK
+          description: List of operators.
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Subaccount'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              examples:
-                Invalid_Token:
-                  description: The access token is invalid or has expired.
-                  value:
-                    error_code: NOT_AUTHORIZED
-                    error_message: invalid access token
-                Missing_Token:
-                  description: No access token is provided.
-                  value:
-                    error_code: NOT_AUTHORIZED
-                    message: access token required
-                Not_Authorized_Token:
-                  description: The access token is valid but the application is not authorized.
-                  value:
-                    error_code: NOT_AUTHORIZED
-                    error_message: NOT_AUTHORIZED
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              examples:
-                Forbidden:
-                  description: You do not have required scopes for making this request.
-                  value:
-                    error_code: FORBIDDEN
-                    error_message: request_not_allowed
-                    status_code: '403'
-              schema:
-                $ref: '#/components/schemas/ErrorForbidden'
+                  $ref: '#/components/schemas/Operator'
+      deprecated: true
       tags:
         - Subaccounts
-      x-codegen:
-        method_name: list
-      x-scopes:
-        - user.subaccounts
+      x-permissions:
+        - members_read
+      x-scopes: []
     post:
       operationId: CreateSubAccount
-      summary: Create a subaccount
+      summary: Create operator.
+      description: Creates new operator for currently authorized users' merchant.
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              description: Details of the new employee
               type: object
               properties:
+                nickname:
+                  type: string
+                  example: Operator 1
                 password:
-                  description: Password
                   type: string
+                  example: correct horse batter staple
+                  minLength: 8
+                permissions:
+                  type: object
+                  properties:
+                    create_moto_payments:
+                      type: boolean
+                    create_referral:
+                      type: boolean
+                    full_transaction_history_view:
+                      type: boolean
+                    refund_transactions:
+                      type: boolean
                 username:
-                  description: Username of the new sub-account. Must be a valid email address.
                   type: string
+                  format: email
+                  example: operator1@mydomain.com
+              required:
+                - username
+                - password
       responses:
         '200':
-          description: OK
+          description: Newly created operator.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Subaccount'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              examples:
-                Invalid_Token:
-                  description: The access token is invalid or has expired.
-                  value:
-                    error_code: NOT_AUTHORIZED
-                    error_message: invalid access token
-                Missing_Token:
-                  description: No access token is provided.
-                  value:
-                    error_code: NOT_AUTHORIZED
-                    message: access token required
-                Not_Authorized_Token:
-                  description: The access token is valid but the application is not authorized.
-                  value:
-                    error_code: NOT_AUTHORIZED
-                    error_message: NOT_AUTHORIZED
-              schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Operator'
         '403':
-          description: Forbidden
+          description: error response for compat API calls
           content:
             application/json:
-              examples:
-                Forbidden:
-                  description: You do not have required scopes for making this request.
-                  value:
-                    error_code: FORBIDDEN
-                    error_message: request_not_allowed
-                    status_code: '403'
               schema:
-                $ref: '#/components/schemas/ErrorForbidden'
+                $ref: '#/components/schemas/CompatError'
+      deprecated: true
       tags:
         - Subaccounts
-      x-scopes:
-        - user.subaccounts
-  '/v0.1/me/accounts/{operator_code}':
+      x-permissions:
+        - members_write
+      x-scopes: []
+  '/v0.1/me/accounts/{operator_id}':
     delete:
       operationId: DeactivateSubAccount
-      summary: Deactivate a subaccount
+      summary: Disable operator.
       parameters:
-        - name: operator_code
+        - name: operator_id
           in: path
-          description: Operator code
           required: true
           schema:
-            type: string
+            type: integer
+            format: int32
       responses:
         '200':
-          description: OK
+          description: Operator successfuly disabled.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Subaccount'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              examples:
-                Invalid_Token:
-                  description: The access token is invalid or has expired.
-                  value:
-                    error_code: NOT_AUTHORIZED
-                    error_message: invalid access token
-                Missing_Token:
-                  description: No access token is provided.
-                  value:
-                    error_code: NOT_AUTHORIZED
-                    message: access token required
-                Not_Authorized_Token:
-                  description: The access token is valid but the application is not authorized.
-                  value:
-                    error_code: NOT_AUTHORIZED
-                    error_message: NOT_AUTHORIZED
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              examples:
-                Forbidden:
-                  description: You do not have required scopes for making this request.
-                  value:
-                    error_code: FORBIDDEN
-                    error_message: request_not_allowed
-                    status_code: '403'
-              schema:
-                $ref: '#/components/schemas/ErrorForbidden'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              examples:
-                Not_Found:
-                  description: The identified resource is not found on the server.
-                  value:
-                    error_code: NOT_FOUND
-                    message: Resource not found
-              schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Operator'
+      deprecated: true
       tags:
         - Subaccounts
-      x-codegen:
-        method_name: deactivate
-      x-scopes:
-        - user.subaccounts
-    put:
-      operationId: UpdateSubAccount
-      summary: Update a subaccount
+      x-permissions:
+        - members_write
+      x-scopes: []
+    get:
+      operationId: CompatGetOperator
+      summary: Get operator
+      description: Returns specific operator.
       parameters:
-        - name: operator_code
+        - name: operator_id
           in: path
-          description: Operator code
           required: true
           schema:
-            type: string
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Operator.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Operator'
+      deprecated: true
+      tags:
+        - Subaccounts
+      x-permissions:
+        - members_read
+      x-scopes: []
+    put:
+      operationId: UpdateSubAccount
+      summary: Update operator.
+      description: Updates operator. If the operator was disabled and their password is updated they will be unblocked.
+      parameters:
+        - name: operator_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              description: Details of the new employee
+              type: object
+              properties:
+                disabled:
+                  type: boolean
+                nickname:
+                  type: string
+                  example: Operator 1
+                password:
+                  type: string
+                  example: correct horse batter staple
+                  minLength: 8
+                permissions:
+                  type: object
+                  properties:
+                    create_moto_payments:
+                      type: boolean
+                    create_referral:
+                      type: boolean
+                    full_transaction_history_view:
+                      type: boolean
+                    refund_transactions:
+                      type: boolean
+                username:
+                  type: string
+                  format: email
+                  maxLength: 256
+      responses:
+        '200':
+          description: Updated operator.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Operator'
+        '400':
+          description: Invalid Operators' email or password was already used.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompatError'
+      deprecated: true
+      tags:
+        - Subaccounts
+      x-permissions:
+        - members_write
+      x-scopes: []
+  '/v0.1/me/accounts/{operator_id}/disable':
+    post:
+      operationId: CompatDisableOperator
+      summary: Disable operator.
+      parameters:
+        - name: operator_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Operator successfuly disabled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Operator'
+      deprecated: true
+      tags:
+        - Subaccounts
+      x-permissions:
+        - members_write
+      x-scopes: []
+  '/v0.1/me/accounts/{operator_id}/reset':
+    put:
+      operationId: CompatChangeOperatorsPassword
+      summary: Change operators password.
+      description: 'Changes operators password, if the operator was disabled they will be unblocked.'
+      parameters:
+        - name: operator_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
               type: object
               properties:
                 password:
-                  description: Password
                   type: string
-                username:
-                  description: Username of the new sub-account. Must be a valid email address.
-                  type: string
+                  example: correct horse batter staple
+                  minLength: 8
       responses:
         '200':
-          description: OK
+          description: Operators' password successfully changed.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Subaccount'
-        '401':
-          description: Unauthorized
+                $ref: '#/components/schemas/Operator'
+        '400':
+          description: Operators' password was already used.
           content:
             application/json:
-              examples:
-                Invalid_Token:
-                  description: The access token is invalid or has expired.
-                  value:
-                    error_code: NOT_AUTHORIZED
-                    error_message: invalid access token
-                Missing_Token:
-                  description: No access token is provided.
-                  value:
-                    error_code: NOT_AUTHORIZED
-                    message: access token required
-                Not_Authorized_Token:
-                  description: The access token is valid but the application is not authorized.
-                  value:
-                    error_code: NOT_AUTHORIZED
-                    error_message: NOT_AUTHORIZED
               schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              examples:
-                Forbidden:
-                  description: You do not have required scopes for making this request.
-                  value:
-                    error_code: FORBIDDEN
-                    error_message: request_not_allowed
-                    status_code: '403'
-              schema:
-                $ref: '#/components/schemas/ErrorForbidden'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              examples:
-                Not_Found:
-                  description: The identified resource is not found on the server.
-                  value:
-                    error_code: NOT_FOUND
-                    message: Resource not found
-              schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/CompatError'
+      deprecated: true
       tags:
         - Subaccounts
-      x-codegen:
-        method_name: update
-      x-scopes:
-        - user.subaccounts
+      x-permissions:
+        - members_write
+      x-scopes: []
   /v0.1/me/financials/payouts:
     get:
       operationId: ListPayouts
@@ -2431,6 +2426,18 @@ paths:
           description: Filter the returned members by the membership status.
           schema:
             $ref: '#/components/schemas/MembershipStatus'
+        - name: roles
+          in: query
+          description: Filter the returned users by role.
+          schema:
+            type: array
+            items:
+              type: string
+            example:
+              - role_employee
+              - role_accountant
+          explode: true
+          style: form
         - name: merchant_code
           in: path
           required: true
@@ -2479,10 +2486,28 @@ paths:
             schema:
               type: object
               properties:
+                attributes:
+                  $ref: '#/components/schemas/Attributes'
                 email:
                   description: Email address of the member to add.
                   type: string
                   format: email
+                is_managed_user:
+                  description: |
+                    True if the user is managed by the merchant. In this case, we'll created a virtual user with the provided password and nickname.
+                  type: boolean
+                metadata:
+                  $ref: '#/components/schemas/Metadata'
+                nickname:
+                  description: |
+                    Nickname of the member to add. Only used if `is_managed_user` is true. Used for display purposes only.
+                  type: string
+                  example: Test User
+                password:
+                  description: Password of the member to add. Only used if `is_managed_user` is true.
+                  type: string
+                  format: password
+                  minLength: 8
                 roles:
                   description: List of roles to assign to the new member.
                   type: array
@@ -2593,15 +2618,39 @@ paths:
             schema:
               type: object
               properties:
+                attributes:
+                  $ref: '#/components/schemas/Attributes'
+                metadata:
+                  $ref: '#/components/schemas/Metadata'
                 roles:
                   type: array
                   items:
                     type: string
-              required:
-                - roles
+                user:
+                  description: Allows you to update user data of managed users.
+                  type: object
+                  properties:
+                    nickname:
+                      description: |
+                        User's perferred name. Used for display purposes only.
+                      type: string
+                      example: Test User
+                    password:
+                      description: Password of the member to add. Only used if `is_managed_user` is true.
+                      type: string
+                      format: password
+                      minLength: 8
       responses:
-        '204':
+        '200':
           description: Member updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+        '400':
+          description: Cannot set password or nickname for an invited user.
+        '403':
+          description: Cannot change password for managed user. Password was already used before.
         '404':
           description: Merchant or member not found.
       tags:
@@ -2836,7 +2885,7 @@ paths:
               - example: 'Tue, 03 May 2022 14:46:44 GMT'
                 format: httpdate
                 type: string
-              - example: '2023-05-30T10:38:01Z'
+              - example: '2023-05-30T10:38:01+00:00'
                 format: date-time
                 type: string
         - name: merchant_code
@@ -3055,6 +3104,20 @@ paths:
                       detail:
                         type: string
                         example: Gateway Timeout
+      callbacks:
+        ReaderCheckoutStatusChange:
+          '{$request.body#/return_url}':
+            post:
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/ReaderCheckoutStatusChange'
+              responses:
+                '200':
+                  description: |
+                    Your server returns this code if it accepts the callback.
+                    If the server returns any other code, the callback will be retried up to 5 times with exponential backoff.
       tags:
         - Readers
       x-permissions:
@@ -3262,76 +3325,6 @@ components:
           example: Berlin
       required:
         - country
-    AddressPayload:
-      description: Personal address
-      type: object
-      properties:
-        address_line1:
-          description: Address line 1
-          type: string
-        address_line2:
-          description: Address line 2
-          type: string
-        city:
-          description: City
-          type: string
-        company:
-          description: Company name
-          type: string
-        country:
-          description: Country ISO 3166-1 code
-          type: string
-        first_name:
-          description: First name
-          type: string
-        landline:
-          description: Landline number
-          type: string
-        last_name:
-          description: Last name
-          type: string
-        post_code:
-          description: Postal code
-          type: string
-        region_id:
-          description: Country region id
-          type: number
-        region_name:
-          description: Country region name
-          type: string
-      required:
-        - address_line1
-        - city
-        - country
-        - post_code
-    AddressResponse:
-      description: Personal address information.
-      type: object
-      properties:
-        city:
-          description: City name from the address.
-          type: string
-          example: Berlin
-        country:
-          description: 'Two letter country code formatted according to [ISO3166-1 alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2).'
-          type: string
-          example: DE
-        line1:
-          description: First line of the address with details of the street name and number.
-          type: string
-          example: Sample street
-        line2:
-          description: 'Second line of the address with details of the building, unit, apartment, and floor numbers.'
-          type: string
-          example: ap. 5
-        postal_code:
-          description: Postal code from the address.
-          type: string
-          example: '10115'
-        state:
-          description: State name or abbreviation from the address.
-          type: string
-          example: Berlin
     AddressWithDetails:
       description: Details of the registered address.
       type: object
@@ -3475,34 +3468,12 @@ components:
         tipping:
           description: Tipping.
           type: string
-    AuthCode:
-      description: Authorization code flow
+    Attributes:
+      description: Object attributes that modifiable only by SumUp applications.
       type: object
-      properties:
-        client_id:
-          description: 'The client ID of your application that was generated when you [registered it](https://developer.sumup.com/docs/register-app/).'
-          type: string
-          example: fOcmczrYtYMJ7Li5GjMLLcUeC9dN
-        redirect_uri:
-          description: 'The URI to which the merchant user is redirected after authorizing your application to access their user''s profile data and to which the authorization code is sent. The value must match exactly one of the [registered URIs](https://developer.sumup.com/docs/register-app#3-create-oauth-client-credentials) for your application.'
-          type: string
-          example: 'https://sample-app.example.com/callback'
-        response_type:
-          description: The type of the expected response. The value must be `code` to indicate that you expect to receive an authorization code.
-          type: string
-          example: code
-        scope:
-          description: 'A space-separated list of scopes for which you request authorization. If you don''t specify any scopes in the request, your application will be granted authorization for the default scopes.'
-          type: string
-          example: payments
-        state:
-          description: 'A unique local state that can be used for correlating requests and responses and for preventing [cross-site request forgery](https://tools.ietf.org/html/rfc6749#section-10.12).'
-          type: string
-          example: 2cFCsY36y95lFHk4
-      required:
-        - response_type
-        - client_id
-        - redirect_uri
+      example: {}
+      additionalProperties:
+        maxLength: 256
     AuthToken:
       description: Authorization token flow
       type: object
@@ -3573,54 +3544,6 @@ components:
         swift:
           description: SWIFT code
           type: string
-    BankAccountPayload:
-      type: object
-      properties:
-        account_category:
-          description: Determines if this bank account is business or personal.
-          type: string
-          enum:
-            - PERSONAL
-            - BUSINESS
-        account_holder_name:
-          description: Account holder name
-          type: string
-        account_number:
-          description: Account number
-          type: string
-        account_type:
-          description: Type of the account.
-          type: string
-          enum:
-            - CURRENT
-            - SAVINGS
-        bank_code:
-          description: Bank code
-          type: string
-        branch_code:
-          description: Branch code
-          type: string
-        check_digit:
-          description: Check digit
-          type: string
-        iban:
-          description: IBAN
-          type: string
-        primary:
-          description: Determines if this bank account will be primary. Default is false
-          type: boolean
-        status:
-          description: Determines the bank account status.
-          type: string
-          enum:
-            - OPEN
-        swift:
-          description: SWIFT code
-          type: string
-      required:
-        - account_holder_name
-        - iban
-        - swift
     BusinessOwners:
       description: Business owners information.
       type: array
@@ -3828,119 +3751,6 @@ components:
           example: '2020-02-29T10:56:56+00:00'
           nullable: true
       title: Checkout
-    CheckoutAccepted:
-      description: 3DS Response
-      type: object
-      properties:
-        next_step:
-          description: Required action processing 3D Secure payments.
-          type: object
-          properties:
-            mechanism:
-              description: Indicates allowed mechanisms for redirecting an end user. If both values are provided to ensure a redirect takes place in either.
-              type: array
-              items:
-                enum:
-                  - iframe
-                  - browser
-                type: string
-            method:
-              description: Method used to complete the redirect.
-              type: string
-              example: POST
-            payload:
-              description: Contains parameters essential for form redirection. Number of object keys and their content can vary.
-              type: object
-              properties:
-                MD:
-                  example: b1a536c0-29b9-11eb-adc1-0242ac120002
-                PaReq:
-                  example: eJxVUttu2zAM/RXDr4MjyY5dO6BVuE27FZuDZHGG9VGRmMSFb/Wljff1k9KkF0APPCR1eHQouD6WhfWCbZfXVWyzCbUtrGSt8mof25vs3gltq+tFpURRVxjbI3b2NYfs0CLO1yiHFjmk2HVij1auYrsRW1+F0U4qZxfKwJlur4QTYcQcJoIdc+XO2/poc1gmv/GZw3k216MnLpAL1JytPIiq5yDk883Dgk+DwPV9IGcIJbYPc84o1Ye6lHqu5wVA3tJQiRL5eiiHxlqKscSq76xfeZn3qICciiDroerbkYeuvnYBMLQFP/R9MyOkM9cnCoGYJJAPScvBRJ0mOeaKr/6l08XT6jXN7tx0vvHSbOMtsj1dzB9jIKYDlOiRu1omYyy0WDCj0YxFQE55EKWZzj2f6ee9xdCYEcmnwucEaN9bvaeRR1ehFn9BgMdGr0l3aCvfYyAfem9/GENlrz36ufpTBPTv07r8lm3qpPiOo1y/7u+SJImNzacmw5hrX1wt/kRpABBDQ84bJOf16+jLt/gPhUvGGw==
-                TermUrl:
-                  example: 'https://api.sumup.com/v0.1/checkouts/e552de3b-1777-4c91-bdb8-756967678572/complete_payment'
-            redirect_url:
-              description: Refers to a url where the end user is redirected once the payment processing completes.
-              type: string
-              example: 'https://mysite.com/completed_purchase'
-            url:
-              description: Where the end user is redirected.
-              type: string
-              example: 'https://dummy-3ds-gateway.com/cap?RID=1233&VAA=A'
-    CheckoutCreate:
-      description: Details of the payment checkout.
-      type: object
-      properties:
-        amount:
-          description: Amount of the payment.
-          type: number
-          format: float
-        checkout_reference:
-          description: Unique ID of the payment checkout specified by the client application when creating the checkout resource.
-          type: string
-          maxLength: 90
-        currency:
-          $ref: '#/components/schemas/Currency'
-        date:
-          description: 'Date and time of the creation of the payment checkout. Response format expressed according to [ISO8601](https://en.wikipedia.org/wiki/ISO_8601) code.'
-          type: string
-          format: date-time
-          example: '2020-02-29T10:56:56+00:00'
-          readOnly: true
-        description:
-          description: 'Short description of the checkout visible in the SumUp dashboard. The description can contribute to reporting, allowing easier identification of a checkout.'
-          type: string
-        id:
-          description: Unique ID of the checkout resource.
-          type: string
-          readOnly: true
-        merchant_code:
-          description: Unique identifying code of the merchant profile.
-          type: string
-        pay_to_email:
-          description: Email address of the registered user (merchant) to whom the payment is made. It is highly recommended to use `merchant_code` instead of `pay_to_email`.
-          type: string
-          format: email
-        redirect_url:
-          description: Required for 3DS checkouts. Refers to a URL where the end user is redirected once the payment processing completes.
-          type: string
-          example: 'https://mysite.com/completed_purchase'
-        return_url:
-          description: URL to which the SumUp platform sends the processing status of the payment checkout.
-          type: string
-          format: uri
-        status:
-          description: Current status of the checkout.
-          type: string
-          enum:
-            - PENDING
-            - FAILED
-            - PAID
-          readOnly: true
-        transactions:
-          description: List of transactions related to the payment.
-          type: array
-          items:
-            allOf:
-              - $ref: '#/components/schemas/TransactionMixinBase'
-              - $ref: '#/components/schemas/TransactionMixinCheckout'
-          readOnly: true
-          uniqueItems: true
-        valid_until:
-          description: 'Date and time of the checkout expiration before which the client application needs to send a processing request. If no value is present, the checkout does not have an expiration time.'
-          type: string
-          format: date-time
-          example: '2020-02-29T10:56:56+00:00'
-          nullable: true
-          readOnly: true
-      required:
-        - checkout_reference
-        - amount
-        - currency
-        - merchant_code
-        - id
-        - status
-        - date
-        - transactions
     CheckoutCreateRequest:
       description: Details of the payment checkout.
       type: object
@@ -4158,87 +3968,19 @@ components:
               example: 410fc44a-5956-44e1-b5cc-19c6f8d727a4
               readOnly: true
           type: object
-    CheckoutSuccessToken:
-      description: Details of the payment checkout.
+    CompatError:
+      description: Error
       type: object
       properties:
-        amount:
-          description: Amount of the payment.
-          type: number
-          format: float
-          example: 10.1
-        checkout_reference:
-          description: Unique ID of the payment checkout specified by the client application when creating the checkout resource.
+        error_code:
           type: string
-          maxLength: 90
-        currency:
-          $ref: '#/components/schemas/Currency'
-        customer_id:
-          description: 'Unique identification of a customer. If specified, the checkout session and payment instrument are associated with the referenced customer.'
+          example: NOT_FOUND
+        message:
           type: string
-        date:
-          description: 'Date and time of the creation of the payment checkout. Response format expressed according to [ISO8601](https://en.wikipedia.org/wiki/ISO_8601) code.'
-          type: string
-          format: date-time
-          example: '2020-02-29T10:56:56+00:00'
-          readOnly: true
-        description:
-          description: 'Short description of the checkout visible in the SumUp dashboard. The description can contribute to reporting, allowing easier identification of a checkout.'
-          type: string
-        id:
-          description: Unique ID of the checkout resource.
-          type: string
-          readOnly: true
-        merchant_code:
-          description: Unique identifying code of the merchant profile.
-          type: string
-        merchant_name:
-          description: Name of the merchant
-          type: string
-          example: Sample Merchant
-        pay_to_email:
-          description: Email address of the registered user (merchant) to whom the payment is made. It is highly recommended to use `merchant_code` instead of `pay_to_email`.
-          type: string
-          format: email
-        payment_instrument:
-          description: Object containing token information for the specified payment instrument
-          type: object
-          properties:
-            token:
-              description: Token value
-              type: string
-              example: e76d7e5c-9375-4fac-a7e7-b19dc5302fbc
-        redirect_url:
-          description: Refers to a url where the end user is redirected once the payment processing completes.
-          type: string
-          example: 'https://mysite.com/completed_purchase'
-        status:
-          description: Current status of the checkout.
-          type: string
-          enum:
-            - PENDING
-            - FAILED
-            - PAID
-          readOnly: true
-        transaction_code:
-          description: Transaction code of the successful transaction with which the payment for the checkout is completed.
-          type: string
-          example: TEENSK4W2K
-          readOnly: true
-        transaction_id:
-          description: Transaction ID of the successful transaction with which the payment for the checkout is completed.
-          type: string
-          example: 410fc44a-5956-44e1-b5cc-19c6f8d727a4
-          readOnly: true
-        transactions:
-          description: List of transactions related to the payment.
-          type: array
-          items:
-            allOf:
-              - $ref: '#/components/schemas/TransactionMixinBase'
-              - $ref: '#/components/schemas/TransactionMixinCheckout'
-          readOnly: true
-          uniqueItems: true
+          example: Resource not found.
+      required:
+        - error_code
+        - message
     CountryDetails:
       description: Country Details
       type: object
@@ -4289,6 +4031,16 @@ components:
           type: string
           format: uri
           example: 'https://www.example.com'
+        tip_rates:
+          description: |
+            List of tipping rates to be displayed to the cardholder.
+            The rates are in percentage and should be between 0.01 and 0.99.
+            The list should be sorted in ascending order.
+          type: array
+          items:
+            format: float
+            multipleOf: 0.01
+            type: number
         total_amount:
           $ref: '#/components/schemas/CreateReaderCheckoutAmount'
       required:
@@ -4411,27 +4163,6 @@ components:
           type: string
         email:
           description: Doing business as email
-          type: string
-        vat_id:
-          description: Doing business as VAT ID
-          type: string
-        website:
-          description: Doing business as website
-          type: string
-    DoingBusinessAsPayload:
-      description: Doing Business As information
-      type: object
-      properties:
-        address:
-          $ref: '#/components/schemas/AddressPayload'
-        business_name:
-          description: Doing business as name
-          type: string
-        email:
-          description: Doing business as email
-          type: string
-        tax_id:
-          description: Doing business as Tax ID
           type: string
         vat_id:
           description: Doing business as VAT ID
@@ -4679,6 +4410,8 @@ components:
         A member is user within speicfic resource identified by resource id, resource type, and associated roles.
       type: object
       properties:
+        attributes:
+          $ref: '#/components/schemas/Attributes'
         created_at:
           type: string
           format: date-time
@@ -4689,6 +4422,8 @@ components:
           example: mem_WZsm7QTPhVrompscmPhoGTXXcrd58fr9MOhP
         invite:
           $ref: '#/components/schemas/Invite'
+        metadata:
+          $ref: '#/components/schemas/Metadata'
         permissions:
           description: User's permissions.
           type: array
@@ -4748,79 +4483,13 @@ components:
         - updated_at
         - status
       title: Member
-    Membership:
-      description: |
-        A membership associates a user with a resource, memberships is defined by user, resource, resource type, and associated roles.
-      type: object
-      properties:
-        created_at:
-          type: string
-          format: date-time
-          example: '2023-01-20T15:16:17Z'
-        id:
-          description: ID of the membership.
-          type: string
-          example: mem_WZsm7QTPhVrompscmPhoGTXXcrd58fr9MOhP
-        invite:
-          $ref: '#/components/schemas/Invite'
-        permissions:
-          description: User's permissions.
-          type: array
-          items:
-            type: string
-          example:
-            - members_read
-            - members_write
-            - create_moto_payments
-            - full_transaction_history_view
-            - refund_transactions
-            - create_referral
-            - developer_settings_write
-            - developer_settings_read
-        resource_id:
-          description: ID of the resource the membership is in.
-          type: string
-          example: M2DDT39A
-        resource_name:
-          description: Name of the resource the membership is in.
-          type: string
-          example: SumUp
-        roles:
-          description: User's roles.
-          type: array
-          items:
-            type: string
-          example:
-            - role_admin
-        status:
-          $ref: '#/components/schemas/MembershipStatus'
-        type:
-          description: Type of the resource the membership is in.
-          type: string
-          example: merchant
-          enum:
-            - merchant
-        updated_at:
-          type: string
-          format: date-time
-          example: '2023-01-20T15:16:17Z'
-      required:
-        - id
-        - resource_id
-        - resource_name
-        - type
-        - roles
-        - permissions
-        - created_at
-        - updated_at
-        - status
-      title: Membership
     MembershipStatus:
       type: string
       enum:
         - accepted
         - pending
         - expired
+        - disabled
         - unknown
     MembershipUser:
       description: User information.
@@ -4852,6 +4521,12 @@ components:
             User's perferred name. Used for display purposes only.
           type: string
           example: Test User
+        picture:
+          description: |
+            URL of the End-User's profile picture. This URL refers to an image file (for example, a PNG, JPEG, or GIF image file), rather than to a Web page containing an image.
+          type: string
+          format: uri
+          example: 'https://usercontent.sumup.com/44ca0f5b-813b-46e1-aee7-e6242010662e.png'
         virtual_user:
           description: |
             True if the user is a virtual user (operator).
@@ -4885,8 +4560,6 @@ components:
           type: boolean
         merchant_profile:
           $ref: '#/components/schemas/MerchantProfile'
-        operators:
-          $ref: '#/components/schemas/Operators'
         permissions:
           $ref: '#/components/schemas/Permissions'
         personal_profile:
@@ -4951,70 +4624,6 @@ components:
         website:
           description: Website
           type: string
-    MerchantProfilePayload:
-      description: Account's merchant profile
-      type: object
-      properties:
-        address:
-          $ref: '#/components/schemas/AddressPayload'
-        business_owners:
-          $ref: '#/components/schemas/BusinessOwners'
-        company_name:
-          description: Company name
-          type: string
-        company_registration_number:
-          description: Company registration number
-          type: string
-        doing_business_as:
-          type: object
-          properties:
-            address:
-              $ref: '#/components/schemas/AddressPayload'
-            business_name:
-              description: Doing business as name
-              type: string
-            email:
-              description: Doing business as email
-              type: string
-            tax_id:
-              description: Doing business as Tax ID
-              type: string
-            vat_id:
-              description: Doing business as Vat ID
-              type: string
-            website:
-              description: Doing business as website
-              type: string
-        is_test_account:
-          description: Defines if the profile nature is for testing
-          type: boolean
-        legal_type_id:
-          description: Id of the legal type of the merchant
-          type: number
-        merchant_category_code:
-          description: Merchant category code
-          type: string
-        mobile_phone:
-          description: Mobile number
-          type: string
-        nature_and_purpose:
-          description: 'Nature and purpose of the business. Required for the following merchant category codes: 5999, 7392, 8999, 5694, 5969, 7299, 7399'
-          type: string
-        permanent_certificate_access_code:
-          description: Payment certificate access code
-          type: string
-        vat_id:
-          description: Vat ID
-          type: string
-        website:
-          description: Company website
-          type: string
-      required:
-        - legal_type_id
-        - company_registration_number
-        - merchant_category_code
-        - company_name
-        - address
     MerchantSettings:
       description: 'Merchant settings &#40;like \"payout_type\", \"payout_period\"&#41;'
       type: object
@@ -5060,38 +4669,15 @@ components:
         tax_enabled:
           description: Whether to show tax in receipts &#40;saved per transaction&#41;
           type: boolean
-    MerchantSettingsPayload:
-      type: object
-      properties:
-        expected_max_transaction_amount:
-          description: Expected maximum amount of a single purchase
-          type: number
-        gross_settlement:
-          description: Gross settlement
-          type: boolean
-        payout_on_demand:
-          description: 'If true, the merchant will not receive automatic payouts.'
-          type: boolean
-        payout_on_demand_available:
-          description: 'If true, the merchant will be able to manage  payout_on_demand settings'
-          type: string
-        payout_period:
-          description: Payout period.
-          type: string
-          enum:
-            - dayly
-            - weekly
-            - monthly
-        payout_type:
-          description: Payout type.
-          type: string
-          enum:
-            - SINGLE_PAYMENT
-        printers_enabled:
-          description: Printers enabled.
-          type: boolean
     Meta:
       description: Set of user-defined key-value pairs attached to the object.
+      type: object
+      example: {}
+      additionalProperties:
+        maxLength: 256
+      maxProperties: 50
+    Metadata:
+      description: 'Set of user-defined key-value pairs attached to the object. Partial updates are not supported. When updating, always submit whole metadata.'
       type: object
       example: {}
       additionalProperties:
@@ -5124,39 +4710,62 @@ components:
         - products
         - user.app-settings
       maxItems: 128
-    Operators:
-      type: array
-      items:
-        properties:
-          username:
-            description: Username of the operator
-            type: string
-        type: object
-    PaymentInstrumentCard:
-      description: Details of the payment card that is saved as a payment instrument.
+    Operator:
       type: object
       properties:
-        active:
-          description: 'Indicates whether the payment instrument is active and can be used for payments. To deactivate it, send a `DELETE` request to the resource endpoint.'
-          type: boolean
-          default: true
-          readOnly: true
-        card:
-          $ref: '#/components/schemas/Card'
-        token:
-          description: Unique token identifying the saved payment card for a customer.
-          type: string
-          readOnly: true
-        type:
-          description: Type of the payment instrument.
+        account_type:
           type: string
           enum:
-            - card
+            - operator
+            - normal
+        created_at:
+          type: string
+          format: date-time
+        disabled:
+          type: boolean
+          example: false
+        id:
+          type: integer
+          format: int32
+        nickname:
+          type: string
+          example: Operator 1
+          nullable: true
+        permissions:
+          $ref: '#/components/schemas/OperatorPermissions'
+        updated_at:
+          type: string
+          format: date-time
+        username:
+          type: string
+          example: operator1@mydomain.com
       required:
-        - token
-        - active
-        - type
-        - card
+        - id
+        - username
+        - disabled
+        - created_at
+        - updated_at
+        - permissions
+        - account_type
+    OperatorPermissions:
+      type: object
+      properties:
+        admin:
+          type: boolean
+        create_moto_payments:
+          type: boolean
+        create_referral:
+          type: boolean
+        full_transaction_history_view:
+          type: boolean
+        refund_transactions:
+          type: boolean
+      required:
+        - create_moto_payments
+        - create_referral
+        - full_transaction_history_view
+        - refund_transactions
+        - admin
     PaymentInstrumentResponse:
       description: Payment Instrument Response
       type: object
@@ -5266,33 +4875,6 @@ components:
           description: Phone number of the customer.
           type: string
           example: '+491635559723'
-    PersonalDetailsResponse:
-      description: Personal details for the customer.
-      type: object
-      properties:
-        address:
-          $ref: '#/components/schemas/AddressResponse'
-        birthdate:
-          description: Date of birth of the customer.
-          type: string
-          format: date
-          example: '1993-12-31'
-        email:
-          description: Email address of the customer.
-          type: string
-          example: user@example.com
-        first_name:
-          description: First name of the customer.
-          type: string
-          example: John
-        last_name:
-          description: Last name of the customer.
-          type: string
-          example: Doe
-        phone:
-          description: Phone number of the customer.
-          type: string
-          example: '+491635559723'
     PersonalProfile:
       description: Account's personal profile.
       type: object
@@ -5313,33 +4895,6 @@ components:
         mobile_phone:
           description: Mobile phone number
           type: string
-    PersonalProfilePayload:
-      description: Account's personal profile.
-      type: object
-      properties:
-        address:
-          $ref: '#/components/schemas/AddressPayload'
-        date_of_birth:
-          description: Date of birth
-          type: string
-          format: date
-        first_name:
-          description: First name of the user
-          type: string
-        last_name:
-          description: Last name of the user
-          type: string
-        mobile_phone:
-          description: Mobile phone number
-          type: string
-        national_id:
-          description: 'National identification id. Country specific. Ex CPF &#40;Brazil&#41;, DNI (Spain), PESEL (Poland)'
-          type: string
-      required:
-        - first_name
-        - last_name
-        - date_of_birth
-        - address
     Product:
       description: Details of the product for which the payment is made.
       type: object
@@ -5644,39 +5199,6 @@ components:
         verification_method:
           description: Cardholder verification method.
           type: string
-    Subaccount:
-      type: object
-      properties:
-        created_at:
-          description: Creation date of the operator
-          type: string
-          example: '2022-12-11T13:46:00Z'
-        disabled:
-          description: True if the subaccount is disabled.
-          type: boolean
-          example: false
-        id:
-          description: ID of the sub-account
-          type: number
-          example: 123
-        permissions:
-          $ref: '#/components/schemas/Permissions'
-        updated_at:
-          type: string
-          format: date-time
-          example: '2022-12-12T14:46:00Z'
-        username:
-          description: Username of the operator
-          type: string
-          example: subaccount@mycompany.com
-      required:
-        - id
-        - username
-        - disabled
-        - created_at
-        - updated_at
-        - permissions
-      title: Sub-Account
     TimeoffsetDetails:
       description: TimeOffset Details
       type: object
@@ -6102,10 +5624,6 @@ tags:
     name: Merchant
     x-core-objects:
       - $ref: '#/components/schemas/MerchantAccount'
-  - description: Manage subaccounts.
-    name: Subaccounts
-    x-core-objects:
-      - $ref: '#/components/schemas/Subaccount'
   - description: |
       API Keys allow your application to gain programmatic access to SumUp.
       API Keys allow application to do authorized requests within the SumUp ecosystem. API Keys are scopes to single account and thus can't be used for endpoints where user presence is needed (for such endpoints it is necessary to use OAuth2).
@@ -6113,11 +5631,10 @@ tags:
     x-core-objects:
       - $ref: '#/components/schemas/APIKey'
   - description: |
-      A reader represents a device that accepts payments. You can use the SumUp Solo to accept in-person payments.
-    name: Readers
-    x-beta: true
+      Endpoints for managing merchant sub-accounts (operators).
+    name: Subaccounts
     x-core-objects:
-      - $ref: '#/components/schemas/Reader'
+      - $ref: '#/components/schemas/Operator'
   - description: |
       Endpoints to manage account members. Members are users that have membership within merchant accounts.
     name: Members
@@ -6125,8 +5642,8 @@ tags:
     x-core-objects:
       - $ref: '#/components/schemas/Member'
   - description: |
-      Endpoints to manage user memberships. Memberships are used to connect users to merchants and to grant them access to the merchant's resources via roles.
-    name: Memberships
+      A reader represents a device that accepts payments. You can use the SumUp Solo to accept in-person payments.
+    name: Readers
     x-beta: true
     x-core-objects:
-      - $ref: '#/components/schemas/Membership'
+      - $ref: '#/components/schemas/Reader'
