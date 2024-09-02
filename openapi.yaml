@@ -4467,7 +4467,7 @@ components:
           - developer_settings_read
         roles:
           - role_admin
-          - role_member
+          - role_owner
         status: accepted
         updated_at: '2023-02-20T15:16:17Z'
         user:
