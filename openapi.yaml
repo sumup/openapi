@@ -1365,7 +1365,7 @@ paths:
       tags:
         - Subaccounts
       x-permissions:
-        - members_read
+        - members_list
       x-scopes: []
     post:
       operationId: CreateSubAccount
@@ -1420,7 +1420,7 @@ paths:
       tags:
         - Subaccounts
       x-permissions:
-        - members_write
+        - members_update
       x-scopes: []
   '/v0.1/me/accounts/{operator_id}':
     delete:
@@ -1444,7 +1444,7 @@ paths:
       tags:
         - Subaccounts
       x-permissions:
-        - members_write
+        - members_delete
       x-scopes: []
     get:
       operationId: CompatGetOperator
@@ -1468,7 +1468,7 @@ paths:
       tags:
         - Subaccounts
       x-permissions:
-        - members_read
+        - members_view
       x-scopes: []
     put:
       operationId: UpdateSubAccount
@@ -1529,7 +1529,7 @@ paths:
       tags:
         - Subaccounts
       x-permissions:
-        - members_write
+        - members_update
       x-scopes: []
   '/v0.1/me/accounts/{operator_id}/disable':
     post:
@@ -2391,6 +2391,136 @@ paths:
         - api_keys_update
       x-scopes:
         - 'api_keys:write'
+  '/v0.1/merchants/{merchant_code}/collections':
+    get:
+      operationId: ListCollections
+      summary: List collections
+      description: |
+        List collections.
+      parameters:
+        - name: merchant_code
+          in: path
+          required: true
+          schema:
+            type: string
+            example: MC0X0ABC
+      responses:
+        '200':
+          description: Successful list.
+        '400':
+          description: Invalid request body.
+        '500':
+          description: An unexpected error occurred.
+      tags:
+        - Collections
+      x-permissions:
+        - verification_file_collections_list
+      x-scopes: []
+  '/v0.1/merchants/{merchant_code}/collections/{collection_id}':
+    patch:
+      operationId: UpdateCollection
+      summary: Update a collection
+      description: |
+        Updates a Collection.
+      parameters:
+        - name: merchant_code
+          in: path
+          required: true
+          schema:
+            type: string
+            example: MC0X0ABC
+        - name: collection_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 123e4567-e89b-12d3-a456-426614174000
+            x-go-type: uuid.UUID
+            x-go-type-import:
+              path: github.com/google/uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  example: confirmed
+              required:
+                - status
+      responses:
+        '204':
+          description: Successful update.
+        '400':
+          description: Invalid request body.
+        '422':
+          description: Unprocessable Entity.
+        '500':
+          description: An unexpected error occurred.
+      tags:
+        - Collections
+      x-permissions:
+        - verification_file_collection_update
+      x-scopes: []
+  '/v0.1/merchants/{merchant_code}/files':
+    post:
+      operationId: UploadFile
+      summary: Uploads a file
+      description: |
+        Uploads a new file associated with a merchant.
+      parameters:
+        - name: merchant_code
+          in: path
+          required: true
+          schema:
+            type: string
+            example: MC0X0ABC
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                collection_id:
+                  type: string
+                  format: uuid
+                  example: 123e4567-e89b-12d3-a456-426614174000
+                  x-go-type: uuid.UUID
+                  x-go-type-import:
+                    path: github.com/google/uuid
+                file:
+                  type: string
+                  format: binary
+                file_type:
+                  description: The type of the file that merchant would like to upload.
+                  type: string
+                  example: power_of_attorney
+                  enum:
+                    - power_of_attorney
+                sort_order:
+                  description: The order of the file in the collection. There could be merchant documents consisting of multiple photos (pages). Default is 0.
+                  type: integer
+                  example: 0
+              required:
+                - file
+                - collection_id
+                - file_type
+      responses:
+        '201':
+          description: Uploaded file.
+        '400':
+          description: Invalid request body.
+        '500':
+          description: An unexpected error occurred.
+      tags:
+        - Files
+      x-permissions:
+        - verification_file_upload
+      x-scopes: []
   '/v0.1/merchants/{merchant_code}/members':
     get:
       operationId: ListMerchantMembers
@@ -2653,6 +2783,8 @@ paths:
           description: Cannot change password for managed user. Password was already used before.
         '404':
           description: Merchant or member not found.
+        '409':
+          description: Cannot update member as some data conflict with existing members.
       tags:
         - Members
       x-permissions:
@@ -5013,13 +5145,15 @@ components:
       maxLength: 9
       minLength: 8
     ReaderStatus:
-      description: |
+      description: |-
         The status of the reader object gives information about the current state of the reader.
+
         Possible values:
-        * `unknown` - The reader status is unknown.
-        * `processing` - The reader is created and waits for the physical device to confirm the pairing.
-        * `paired` - The reader is paired with a merchant account and can be used with SumUp APIs.
-        * `expired` - The pairing is expired and no longer usable with the account. The ressource needs to get recreated
+
+        - `unknown` - The reader status is unknown.
+        - `processing` - The reader is created and waits for the physical device to confirm the pairing.
+        - `paired` - The reader is paired with a merchant account and can be used with SumUp APIs.
+        - `expired` - The pairing is expired and no longer usable with the account. The ressource needs to get recreated
       type: string
       example: paired
       enum:
@@ -5630,6 +5764,12 @@ tags:
     name: API Keys
     x-core-objects:
       - $ref: '#/components/schemas/APIKey'
+  - description: |
+      Endpoint to manage files uploaded by merchant.
+    name: Files
+  - description: |
+      Endpoint to manage collections of files uploaded by merchant.
+    name: Collections
   - description: |
       Endpoints for managing merchant sub-accounts (operators).
     name: Subaccounts
