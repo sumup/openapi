@@ -1365,7 +1365,7 @@ paths:
       tags:
         - Subaccounts
       x-permissions:
-        - members_read
+        - members_list
       x-scopes: []
     post:
       operationId: CreateSubAccount
@@ -1420,7 +1420,7 @@ paths:
       tags:
         - Subaccounts
       x-permissions:
-        - members_write
+        - members_update
       x-scopes: []
   '/v0.1/me/accounts/{operator_id}':
     delete:
@@ -1435,7 +1435,7 @@ paths:
             format: int32
       responses:
         '200':
-          description: Operator successfuly disabled.
+          description: Operator successfully disabled.
           content:
             application/json:
               schema:
@@ -1444,7 +1444,7 @@ paths:
       tags:
         - Subaccounts
       x-permissions:
-        - members_write
+        - members_delete
       x-scopes: []
     get:
       operationId: CompatGetOperator
@@ -1468,7 +1468,7 @@ paths:
       tags:
         - Subaccounts
       x-permissions:
-        - members_read
+        - members_view
       x-scopes: []
     put:
       operationId: UpdateSubAccount
@@ -1529,7 +1529,7 @@ paths:
       tags:
         - Subaccounts
       x-permissions:
-        - members_write
+        - members_update
       x-scopes: []
   '/v0.1/me/accounts/{operator_id}/disable':
     post:
@@ -1544,7 +1544,7 @@ paths:
             format: int32
       responses:
         '200':
-          description: Operator successfuly disabled.
+          description: Operator successfully disabled.
           content:
             application/json:
               schema:
@@ -1728,12 +1728,12 @@ paths:
   /v0.1/me/merchant-profile/bank-accounts:
     get:
       operationId: ListBankAccounts
-      summary: List bank accounts
-      description: Retrives bank accounts of the merchant.
+      summary: List bank accounts (deprecated)
+      description: Retrieves bank accounts of the merchant.
       parameters:
         - name: primary
           in: query
-          description: The true value will return only the primary bank account (the one used for settlements).
+          description: If true only the primary bank account (the one used for payouts) will be returned.
           schema:
             type: boolean
       responses:
@@ -1780,10 +1780,11 @@ paths:
                     status_code: '403'
               schema:
                 $ref: '#/components/schemas/ErrorForbidden'
+      deprecated: true
       tags:
         - Merchant
       x-codegen:
-        method_name: list_bank_accounts
+        method_name: list_bank_accounts_deprecated
       x-scopes:
         - user.payout-settings
         - user.profile
@@ -1989,7 +1990,7 @@ paths:
   /v0.1/me/transactions:
     get:
       operationId: GetTransaction
-      summary: Retrieve a transaction
+      summary: Retrieve a transaction (deprecated)
       description: |
         Retrieves the full details of an identified transaction. The transaction resource is identified by a query parameter and *one* of following parameters is required:
          *  `id`
@@ -2054,16 +2055,17 @@ paths:
                     message: Resource not found
               schema:
                 $ref: '#/components/schemas/Error'
+      deprecated: true
       tags:
         - Transactions
       x-codegen:
-        method_name: get
+        method_name: get_deprecated
       x-scopes:
         - transactions.history
   /v0.1/me/transactions/history:
     get:
       operationId: ListTransactions
-      summary: List transactions
+      summary: List transactions (deprecated)
       description: Lists detailed history of all transactions associated with the merchant profile.
       parameters:
         - name: transaction_code
@@ -2146,7 +2148,7 @@ paths:
             format: date-time
         - name: newest_ref
           in: query
-          description: Filters the results by the reference ID of transaciton events and returns only transactions with events whose IDs are *smaller* than the specified value. This parameters supersedes the `newest_time` parameter (if both are provided in the request).
+          description: Filters the results by the reference ID of transaction events and returns only transactions with events whose IDs are *smaller* than the specified value. This parameters supersedes the `newest_time` parameter (if both are provided in the request).
           schema:
             type: string
         - name: oldest_time
@@ -2157,7 +2159,7 @@ paths:
             format: date-time
         - name: oldest_ref
           in: query
-          description: Filters the results by the reference ID of transaciton events and returns only transactions with events whose IDs are *greater* than the specified value. This parameters supersedes the `oldest_time` parameter (if both are provided in the request).
+          description: Filters the results by the reference ID of transaction events and returns only transactions with events whose IDs are *greater* than the specified value. This parameters supersedes the `oldest_time` parameter (if both are provided in the request).
           schema:
             type: string
       responses:
@@ -2198,10 +2200,11 @@ paths:
                     error_message: NOT_AUTHORIZED
               schema:
                 $ref: '#/components/schemas/Error'
+      deprecated: true
       tags:
         - Transactions
       x-codegen:
-        method_name: list_detailed
+        method_name: list_deprecated
       x-scopes:
         - transactions.history
   '/v0.1/merchants/{merchant_code}/api-keys':
@@ -2415,6 +2418,13 @@ paths:
             default: 10
             maximum: 25
             minimum: 1
+        - name: scroll
+          in: query
+          description: Indicates to skip count query.
+          schema:
+            type: boolean
+            example: true
+            default: false
         - name: email
           in: query
           description: Filter the returned users by email address prefix.
@@ -2460,14 +2470,11 @@ paths:
                     type: integer
                     example: 3
                 required:
-                  - total_count
                   - items
         '404':
           description: Merchant not found.
       tags:
         - Members
-      x-permissions:
-        - members_list
       x-scopes: []
     post:
       operationId: AddMerchantMember
@@ -2632,7 +2639,7 @@ paths:
                   properties:
                     nickname:
                       description: |
-                        User's perferred name. Used for display purposes only.
+                        User's preferred name. Used for display purposes only.
                       type: string
                       example: Test User
                     password:
@@ -2653,6 +2660,8 @@ paths:
           description: Cannot change password for managed user. Password was already used before.
         '404':
           description: Merchant or member not found.
+        '409':
+          description: Cannot update member as some data conflict with existing members.
       tags:
         - Members
       x-permissions:
@@ -2877,7 +2886,7 @@ paths:
             Return the reader only if it has been modified after the specified timestamp given in the headers.
 
             Timestamps are accepted in the following formats:
-             - HTTP Standard: [IMF format (RFC 5322)](https://www.rfc-editor.org/rfc/rfc5322#section-3.3), sometimes also refered to as [RFC 7231](https://www.rfc-editor.org/rfc/rfc7231#section-7.1.1.1).
+             - HTTP Standard: [IMF format (RFC 5322)](https://www.rfc-editor.org/rfc/rfc5322#section-3.3), sometimes also referred to as [RFC 7231](https://www.rfc-editor.org/rfc/rfc7231#section-7.1.1.1).
              - RFC 3339: Used for timestamps in JSON payloads on this API.
           schema:
             type: string
@@ -2913,7 +2922,7 @@ paths:
           description: Malformed request.
         '404':
           description: |
-            The requested Reader ressource does not exists.
+            The requested Reader resource does not exists.
       tags:
         - Readers
       x-permissions:
@@ -2953,7 +2962,7 @@ paths:
       responses:
         '304':
           description: |
-            The update request was successfull, but the reader didn't get updated.
+            The update request was successful, but the reader didn't get updated.
         '403':
           description: |
             The reader is not linked to the merchant account.
@@ -3124,6 +3133,178 @@ paths:
         - readers_checkout_create
       x-scopes:
         - readers.write
+  '/v0.1/merchants/{merchant_code}/readers/{id}/terminate':
+    post:
+      operationId: CreateReaderTerminate
+      summary: Create a Reader Terminate action
+      description: |
+        Create a Terminate action for a Reader.
+
+        It stops the current transaction on the target device.
+
+        This process is asynchronous and the actual termination may take some time to be performed on the device.
+
+
+        There are some caveats when using this endpoint:
+        * The target device must be online, otherwise terminate won't be accepted
+        * The action will succeed only if the device is waiting for cardholder action: e.g: waiting for card, waiting for PIN, etc.
+        * There is no confirmation of the termination.
+
+        If a transaction is successfully terminated and `return_url` was provided on Checkout, the transaction status will be sent as `failed` to the provided URL.
+
+        **Note**: If the target device is a Solo, it must be in version 3.3.28.0 or higher.
+      parameters:
+        - name: merchant_code
+          in: path
+          required: true
+          schema:
+            type: string
+            example: MC0X0ABC
+        - name: id
+          in: path
+          description: |
+            The unique identifier of the reader.
+          required: true
+          schema:
+            type: string
+            example: rdr_3MSAFM23CK82VSTT4BN6RWSQ65
+            maxLength: 30
+            minLength: 30
+      responses:
+        '202':
+          description: |
+            The Terminate action was successfully dispatched for the given reader.
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              examples:
+                ReaderOffline:
+                  description: Error returned when the target device is not online.
+                  value:
+                    errors:
+                      detail: The device is offline.
+                      type: READER_OFFLINE
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    additionalProperties: true
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      detail:
+                        type: string
+                        example: Internal Server Error
+        '502':
+          description: Bad Gateway
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      detail:
+                        type: string
+                        example: Bad Gateway
+        '504':
+          description: Gateway Timeout
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      detail:
+                        type: string
+                        example: Gateway Timeout
+      tags:
+        - Readers
+      x-permissions:
+        - readers_checkout_create
+      x-scopes:
+        - readers.write
+  '/v1.1/merchants/{merchant_code}/bank-accounts':
+    get:
+      operationId: ListBankAccountsV11
+      summary: List bank accounts
+      description: Retrieves bank accounts of the merchant.
+      parameters:
+        - name: merchant_code
+          in: path
+          required: true
+          schema:
+            type: string
+            example: MC0X0ABC
+        - name: primary
+          in: query
+          description: If true only the primary bank account (the one used for payouts) will be returned.
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BankAccount'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              examples:
+                Invalid_Token:
+                  description: The access token is invalid or has expired.
+                  value:
+                    error_code: NOT_AUTHORIZED
+                    error_message: invalid access token
+                Missing_Token:
+                  description: No access token is provided.
+                  value:
+                    error_code: NOT_AUTHORIZED
+                    message: access token required
+                Not_Authorized_Token:
+                  description: The access token is valid but the application is not authorized.
+                  value:
+                    error_code: NOT_AUTHORIZED
+                    error_message: NOT_AUTHORIZED
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              examples:
+                Forbidden:
+                  description: You do not have required scopes for making this request.
+                  value:
+                    error_code: FORBIDDEN
+                    error_message: request_not_allowed
+                    status_code: '403'
+              schema:
+                $ref: '#/components/schemas/ErrorForbidden'
+      tags:
+        - Merchant
+      x-codegen:
+        method_name: list_bank_accounts
+      x-scopes:
+        - user.payout-settings
+        - user.profile
+        - user.profile_readonly
   '/v1.1/receipts/{id}':
     get:
       operationId: GetReceipt
@@ -3193,6 +3374,236 @@ paths:
       x-codegen:
         method_name: get
       x-scopes: []
+  '/v2.1/merchants/{merchant_code}/transactions':
+    get:
+      operationId: GetTransactionV2.1
+      summary: Retrieve a transaction
+      description: |
+        Retrieves the full details of an identified transaction. The transaction resource is identified by a query parameter and *one* of following parameters is required:
+         *  `id`
+         *  `internal_id`
+         *  `transaction_code`
+         *  `foreign_transaction_id`
+         *  `client_transaction_id`
+      parameters:
+        - name: merchant_code
+          in: path
+          required: true
+          schema:
+            type: string
+            example: MC0X0ABC
+        - name: id
+          in: query
+          description: Retrieves the transaction resource with the specified transaction ID (the `id` parameter in the transaction resource).
+          schema:
+            type: string
+        - name: internal_id
+          in: query
+          description: Retrieves the transaction resource with the specified internal transaction ID (the `internal_id` parameter in the transaction resource).
+          schema:
+            type: string
+        - name: transaction_code
+          in: query
+          description: Retrieves the transaction resource with the specified transaction code.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionFull'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              examples:
+                Invalid_Token:
+                  description: The access token is invalid or has expired.
+                  value:
+                    error_code: NOT_AUTHORIZED
+                    error_message: invalid access token
+                Missing_Token:
+                  description: No access token is provided.
+                  value:
+                    error_code: NOT_AUTHORIZED
+                    message: access token required
+                Not_Authorized_Token:
+                  description: The access token is valid but the application is not authorized.
+                  value:
+                    error_code: NOT_AUTHORIZED
+                    error_message: NOT_AUTHORIZED
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              examples:
+                Not_Found:
+                  description: The identified resource is not found on the server.
+                  value:
+                    error_code: NOT_FOUND
+                    message: Resource not found
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - Transactions
+      x-codegen:
+        method_name: get
+      x-scopes:
+        - transactions.history
+  '/v2.1/merchants/{merchant_code}/transactions/history':
+    get:
+      operationId: ListTransactionsV2.1
+      summary: List transactions
+      description: Lists detailed history of all transactions associated with the merchant profile.
+      parameters:
+        - name: merchant_code
+          in: path
+          required: true
+          schema:
+            type: string
+            example: MC0X0ABC
+        - name: transaction_code
+          in: query
+          description: Retrieves the transaction resource with the specified transaction code.
+          schema:
+            type: string
+        - name: order
+          in: query
+          description: Specifies the order in which the returned results are displayed.
+          schema:
+            type: string
+            default: ascending
+            enum:
+              - ascending
+              - descending
+        - name: limit
+          in: query
+          description: 'Specifies the maximum number of results per page. Value must be a positive integer and if not specified, will return 10 results.'
+          schema:
+            type: integer
+        - name: users
+          in: query
+          description: Filters the returned results by user email.
+          schema:
+            type: array
+            items:
+              format: email
+              type: string
+        - name: statuses
+          in: query
+          description: Filters the returned results by the specified list of final statuses of the transactions.
+          schema:
+            type: array
+            items:
+              enum:
+                - SUCCESSFUL
+                - CANCELLED
+                - FAILED
+                - REFUNDED
+                - CHARGE_BACK
+              type: string
+        - name: payment_types
+          in: query
+          description: Filters the returned results by the specified list of payment types used for the transactions.
+          schema:
+            type: array
+            items:
+              enum:
+                - CASH
+                - POS
+                - ECOM
+                - BALANCE
+                - MOTO
+                - BOLETO
+                - UNKNOWN
+              type: string
+        - name: types
+          in: query
+          description: Filters the returned results by the specified list of transaction types.
+          schema:
+            type: array
+            items:
+              enum:
+                - PAYMENT
+                - REFUND
+                - CHARGE_BACK
+              type: string
+        - name: changes_since
+          in: query
+          description: 'Filters the results by the latest modification time of resources and returns only transactions that are modified *at or after* the specified timestamp (in [ISO8601](https://en.wikipedia.org/wiki/ISO_8601) format).'
+          schema:
+            type: string
+            format: date-time
+        - name: newest_time
+          in: query
+          description: 'Filters the results by the creation time of resources and returns only transactions that are created *before* the specified timestamp (in [ISO8601](https://en.wikipedia.org/wiki/ISO_8601) format).'
+          schema:
+            type: string
+            format: date-time
+        - name: newest_ref
+          in: query
+          description: Filters the results by the reference ID of transaction events and returns only transactions with events whose IDs are *smaller* than the specified value. This parameters supersedes the `newest_time` parameter (if both are provided in the request).
+          schema:
+            type: string
+        - name: oldest_time
+          in: query
+          description: 'Filters the results by the creation time of resources and returns only transactions that are created *at or after* the specified timestamp (in [ISO8601](https://en.wikipedia.org/wiki/ISO_8601) format).'
+          schema:
+            type: string
+            format: date-time
+        - name: oldest_ref
+          in: query
+          description: Filters the results by the reference ID of transaction events and returns only transactions with events whose IDs are *greater* than the specified value. This parameters supersedes the `oldest_time` parameter (if both are provided in the request).
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TransactionHistory'
+                  links:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Link'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              examples:
+                Invalid_Token:
+                  description: The access token is invalid or has expired.
+                  value:
+                    error_code: NOT_AUTHORIZED
+                    error_message: invalid access token
+                Missing_Token:
+                  description: No access token is provided.
+                  value:
+                    error_code: NOT_AUTHORIZED
+                    message: access token required
+                Not_Authorized_Token:
+                  description: The access token is valid but the application is not authorized.
+                  value:
+                    error_code: NOT_AUTHORIZED
+                    error_message: NOT_AUTHORIZED
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - Transactions
+      x-codegen:
+        method_name: list
+      x-scopes:
+        - transactions.history
 components:
   schemas:
     APIKey:
@@ -3401,7 +3812,7 @@ components:
         tags:
           description: |
             Additional metadata for the transaction.
-            It is key-value object that can be associoated with the transaction.
+            It is key-value object that can be associated with the transaction.
           type: object
           example: {}
           additionalProperties: true
@@ -3536,7 +3947,7 @@ components:
           description: IBAN
           type: string
         primary:
-          description: The primary bank account is the one used for settlements
+          description: The primary bank account is the one used for payouts
           type: boolean
         status:
           description: Status in the verification process
@@ -3998,8 +4409,7 @@ components:
           description: Country native name
           type: string
     CreateReaderCheckout:
-      description: |
-        Teste Reader Checkout
+      description: Reader Checkout
       type: object
       properties:
         affiliate:
@@ -4367,7 +4777,7 @@ components:
       maximum: 180
       minimum: 0
     MandatePayload:
-      description: Mandate is passed when a card is to be tokenised
+      description: Mandate is passed when a card is to be tokenized
       type: object
       properties:
         type:
@@ -4407,7 +4817,7 @@ components:
         type: recurrent
     Member:
       description: |
-        A member is user within speicfic resource identified by resource id, resource type, and associated roles.
+        A member is user within specific resource identified by resource id, resource type, and associated roles.
       type: object
       properties:
         attributes:
@@ -4436,8 +4846,8 @@ components:
             - full_transaction_history_view
             - refund_transactions
             - create_referral
-            - developer_settings_write
-            - developer_settings_read
+            - developer_settings_edit
+            - developer_settings_access
         roles:
           description: User's roles.
           type: array
@@ -4463,8 +4873,8 @@ components:
           - full_transaction_history_view
           - refund_transactions
           - create_referral
-          - developer_settings_write
-          - developer_settings_read
+          - developer_settings_edit
+          - developer_settings_access
         roles:
           - role_admin
           - role_owner
@@ -4518,7 +4928,7 @@ components:
           example: true
         nickname:
           description: |
-            User's perferred name. Used for display purposes only.
+            User's preferred name. Used for display purposes only.
           type: string
           example: Test User
         picture:
@@ -4584,7 +4994,7 @@ components:
           description: Company registration number
           type: string
         country:
-          description: Merchant country isocode &#40;for internal usage only&#41;
+          description: 'Merchant country code formatted according to [ISO3166-1 alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2) &#40;for internal usage only&#41;'
           type: string
         doing_business_as:
           $ref: '#/components/schemas/DoingBusinessAs'
@@ -4965,6 +5375,60 @@ components:
         - created_at
         - updated_at
       title: Reader
+    ReaderCheckoutStatusChange:
+      description: |
+        The callback payload containing the status change of the Reader Checkout.
+      type: object
+      properties:
+        event_type:
+          description: The event type.
+          type: string
+          example: solo.transaction.updated
+        id:
+          description: The unique event id.
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        payload:
+          description: The event payload.
+          type: object
+          properties:
+            client_transaction_id:
+              description: The unique client transaction id. It is the same returned by the Checkout.
+              type: string
+              format: uuid
+              example: ba0a3c07-799e-40f8-89e9-1dfe96e4557e
+            merchant_code:
+              description: The target merchant code owner of the transaction.
+              type: string
+              example: M1234567
+            status:
+              description: The status of the transaction.
+              type: string
+              example: successful
+              enum:
+                - successful
+                - failed
+            transaction_id:
+              description: The unique transaction id.
+              type: string
+              format: uuid
+              example: c88032e4-a384-4030-943c-ac59cc768d90
+              deprecated: true
+          required:
+            - client_transaction_id
+            - merchant_code
+            - status
+        timestamp:
+          description: The timestamp of the event.
+          type: string
+          format: date-time
+          example: '2021-01-01T00:00:00Z'
+      required:
+        - id
+        - event_type
+        - payload
+        - timestamp
     ReaderDevice:
       description: |
         Information about the underlying physical device.
@@ -5013,13 +5477,15 @@ components:
       maxLength: 9
       minLength: 8
     ReaderStatus:
-      description: |
+      description: |-
         The status of the reader object gives information about the current state of the reader.
+
         Possible values:
-        * `unknown` - The reader status is unknown.
-        * `processing` - The reader is created and waits for the physical device to confirm the pairing.
-        * `paired` - The reader is paired with a merchant account and can be used with SumUp APIs.
-        * `expired` - The pairing is expired and no longer usable with the account. The ressource needs to get recreated
+
+        - `unknown` - The reader status is unknown.
+        - `processing` - The reader is created and waits for the physical device to confirm the pairing.
+        - `paired` - The reader is paired with a merchant account and can be used with SumUp APIs.
+        - `expired` - The pairing is expired and no longer usable with the account. The resource needs to get recreated
       type: string
       example: paired
       enum:
@@ -5235,7 +5701,7 @@ components:
         id:
           $ref: '#/components/schemas/EventID'
         installment_number:
-          description: 'Consequtive number of the installment that is paid. Applicable only payout events, i.e. `event_type = PAYOUT`.'
+          description: 'Consecutive number of the installment that is paid. Applicable only payout events, i.e. `event_type = PAYOUT`.'
           type: integer
         status:
           $ref: '#/components/schemas/EventStatus'
