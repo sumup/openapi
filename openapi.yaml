@@ -1728,7 +1728,7 @@ paths:
   /v0.1/me/merchant-profile/bank-accounts:
     get:
       operationId: ListBankAccounts
-      summary: List bank accounts (deprecated)
+      summary: List bank accounts
       description: Retrieves bank accounts of the merchant.
       parameters:
         - name: primary
@@ -1990,7 +1990,7 @@ paths:
   /v0.1/me/transactions:
     get:
       operationId: GetTransaction
-      summary: Retrieve a transaction (deprecated)
+      summary: Retrieve a transaction
       description: |
         Retrieves the full details of an identified transaction. The transaction resource is identified by a query parameter and *one* of following parameters is required:
          *  `id`
@@ -2065,7 +2065,7 @@ paths:
   /v0.1/me/transactions/history:
     get:
       operationId: ListTransactions
-      summary: List transactions (deprecated)
+      summary: List transactions
       description: Lists detailed history of all transactions associated with the merchant profile.
       parameters:
         - name: transaction_code
@@ -2475,10 +2475,12 @@ paths:
           description: Merchant not found.
       tags:
         - Members
+      x-codegen:
+        method_name: list
       x-scopes: []
     post:
-      operationId: AddMerchantMember
-      summary: Add member to merchant.
+      operationId: CreateMerchantMember
+      summary: Create a merchant member.
       parameters:
         - name: merchant_code
           in: path
@@ -2539,6 +2541,8 @@ paths:
             Too many invitations sent to that user. The limit is 10 requests per 5 minutes and the Retry-After header is set to the number of minutes until the reset of the limit.
       tags:
         - Members
+      x-codegen:
+        method_name: create
       x-permissions:
         - members_create
       x-scopes: []
@@ -2567,6 +2571,8 @@ paths:
           description: Merchant or member not found.
       tags:
         - Members
+      x-codegen:
+        method_name: delete
       x-permissions:
         - members_delete
       x-scopes: []
@@ -2598,6 +2604,8 @@ paths:
           description: Merchant or member not found.
       tags:
         - Members
+      x-codegen:
+        method_name: get
       x-permissions:
         - members_view
       x-scopes: []
@@ -2664,6 +2672,8 @@ paths:
           description: Cannot update member as some data conflict with existing members.
       tags:
         - Members
+      x-codegen:
+        method_name: update
       x-permissions:
         - members_update
       x-scopes: []
@@ -2791,6 +2801,8 @@ paths:
                   - items
       tags:
         - Readers
+      x-codegen:
+        method_name: list
       x-permissions:
         - readers_list
       x-scopes:
@@ -2840,6 +2852,8 @@ paths:
               $ref: '#/components/links/UpdateReaderByID'
       tags:
         - Readers
+      x-codegen:
+        method_name: create
       x-permissions:
         - readers_create
       x-scopes:
@@ -2925,6 +2939,8 @@ paths:
             The requested Reader resource does not exists.
       tags:
         - Readers
+      x-codegen:
+        method_name: get
       x-permissions:
         - readers_view
       x-scopes:
@@ -2968,6 +2984,8 @@ paths:
             The reader is not linked to the merchant account.
       tags:
         - Readers
+      x-codegen:
+        method_name: update
       x-permissions:
         - readers_update
       x-scopes:
@@ -3129,6 +3147,8 @@ paths:
                     If the server returns any other code, the callback will be retried up to 5 times with exponential backoff.
       tags:
         - Readers
+      x-codegen:
+        method_name: create_checkout
       x-permissions:
         - readers_checkout_create
       x-scopes:
@@ -3232,6 +3252,8 @@ paths:
                         example: Gateway Timeout
       tags:
         - Readers
+      x-codegen:
+        method_name: terminate_checkout
       x-permissions:
         - readers_checkout_create
       x-scopes:
